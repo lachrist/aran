@@ -15,7 +15,7 @@ export const printReport = ({ index, test, result }) => {
       "",
       getResultStatus(result).toUpperCase(),
       "",
-      `${index} >> test/262/test262/test/${test.path} >> @${test.directive}`,
+      `${index} >> test262/test/${test.path} >> @${test.directive}`,
       "",
       toTestSpecifier(test.path, test.directive),
       "",

@@ -14,7 +14,7 @@ const advice_global_variable = "__LINVAIL_ADVICE__";
 const dir = (/** @type {unknown} */ value) => log(JSON.stringify(value));
 
 const intrinsics = globalThis.eval(generate(setupile({})));
-const { advice, library } = createRuntime(intrinsics, { dir, count: true });
+const { advice, library } = createRuntime(intrinsics, { dir });
 Reflect.defineProperty(globalThis, advice_global_variable, { value: advice });
 Reflect.defineProperty(globalThis, "Linvail", { value: library });
 Reflect.defineProperty(globalThis, "log", { value: log });

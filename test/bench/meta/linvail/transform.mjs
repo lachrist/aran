@@ -1,27 +1,11 @@
 import { parse } from "acorn";
 import { generate } from "astring";
-import { transpile, retropile, weaveStandard } from "aran";
+import { transpile, retropile } from "aran";
+import { weave } from "linvail/instrument";
 import {
   advice_global_variable,
   intrinsic_global_variable,
 } from "./bridge.mjs";
-
-const {
-  Object: { hasOwn },
-} = globalThis;
-
-/** @type {(node: any) => string} */
-const locate = (node) => {
-  if (!hasOwn(node, "loc")) {
-    return "???";
-  }
-  const { start } = node.loc;
-  return `${node.type}:${start.line}:${start.column}`;
-};
-
-/** @type {import("aran").Digest} */
-const _digest = (node, node_path, _file_path, _node_kind) =>
-  `${node_path}#${locate(node)}`;
 
 /** @type {import("../../transform.d.ts").Transform} */
 export default {
@@ -29,7 +13,7 @@ export default {
   transformBase: ({ path, kind, code }) =>
     generate(
       retropile(
-        weaveStandard(
+        weave(
           transpile({
             path,
             kind,
@@ -39,7 +23,7 @@ export default {
               ecmaVersion: 2024,
             }),
           }),
-          { advice_global_variable, pointcut: true },
+          { advice_global_variable },
         ),
         { intrinsic_global_variable },
       ),

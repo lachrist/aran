@@ -2,8 +2,8 @@
 /graveyard/
 /img/
 /node_modules/
-/test/262/codebase/
-/test/262/test262/
+/test262/
+/octane/
 /docs/demo/**/*-source.mjs
 /docs/demo/**/*-bundle.mjs
 /docs/demo/trace.mjs

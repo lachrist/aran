@@ -80,6 +80,7 @@ export const createStage = async ({ include, instrumentation }) => {
   const listSlow = await loadTaggingList(["slow"]);
   const listNegative = await loadTaggingList([
     "proxy",
+    "cyclic-prototype-chain",
     "default-array-prototype-realm",
     ...(include === "comp"
       ? [/** @type {"elusive-dynamic-code"} */ ("elusive-dynamic-code")]
@@ -135,24 +136,23 @@ export const createStage = async ({ include, instrumentation }) => {
         dir: (value) => {
           dir(value, { showHidden: true, showProxy: true });
         },
-        count: false,
       });
       const actual_global = intrinsics.globalThis;
       if (include === "comp") {
         /**
-         * @type {import("linvail").PlainExternalReference & {
-         *   Function: import("linvail").ExternalValue,
-         *   String: (value: import("linvail").ExternalValue) => string,
+         * @type {import("linvail").GuestReference & {
+         *   Function: import("linvail").Value,
+         *   String: (value: import("linvail").Value) => string,
          *   SyntaxError: new (message: string) => unknown,
          *   $262: {
          *     evalScript: (
-         *       & import("linvail").ExternalValue
-         *       & ((code: string) => import("linvail").ExternalValue)
+         *       & import("linvail").Value
+         *       & ((code: string) => import("linvail").Value)
          *     ),
          *   },
          *   eval: (
-         *     & ((code: string) => import("linvail").ExternalValue)
-         *     & import("linvail").ExternalValue
+         *     & ((code: string) => import("linvail").Value)
+         *     & import("linvail").Value
          *   ),
          * }}
          */
@@ -166,29 +166,18 @@ export const createStage = async ({ include, instrumentation }) => {
           SyntaxError,
           $262: { evalScript },
         } = plain_external_global;
-        const {
-          apply,
-          construct,
-          internalize,
-          enterValue,
-          leaveValue,
-          leavePlainInternalReference,
-        } = advice;
-        const plain_internal_global = internalize(plain_external_global, {
-          prototype: "global.Object.prototype",
-        });
-        const external_global = leavePlainInternalReference(
-          plain_internal_global,
+        const { apply, construct, wrap, toHostReferenceWrapper } = advice;
+        const plain_internal_global = toHostReferenceWrapper(
+          plain_external_global,
+          { prototype: "Object.prototype" },
         );
+        const external_global = plain_internal_global.inner;
         intrinsics.globalThis = /** @type {any} */ (external_global);
         intrinsics["aran.global_object"] = /** @type {any} */ (external_global);
-        intrinsics["aran.global_declarative_record"] =
-          leavePlainInternalReference(
-            internalize(
-              /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
-              { prototype: null },
-            ),
-          );
+        intrinsics["aran.global_declarative_record"] = toHostReferenceWrapper(
+          /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
+          { prototype: "none" },
+        ).inner;
         assign(
           advice,
           compileInterceptEval({
@@ -201,8 +190,8 @@ export const createStage = async ({ include, instrumentation }) => {
             Function,
             String,
             SyntaxError,
-            enterValue,
-            leaveValue,
+            enterValue: wrap,
+            leaveValue: ({ inner }) => inner,
             apply,
             construct,
             record_directory,

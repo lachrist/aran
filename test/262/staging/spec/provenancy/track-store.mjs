@@ -12,12 +12,7 @@ import { compileListThresholdExclusion } from "./threshold.mjs";
 import { compileInterceptEval } from "../../helper.mjs";
 import { printBranching } from "./branching.mjs";
 import { digest, parseNodeHash, toEvalPath } from "./location.mjs";
-import {
-  createSizeRegistery,
-  getSize,
-  setAtomicSize,
-  setCompoundSize,
-} from "./size.mjs";
+import { isStandardPrimitive } from "./primitive.mjs";
 
 const {
   URL,
@@ -27,78 +22,72 @@ const {
 } = globalThis;
 
 /**
- * @typedef {import("./location.d.ts").NodeHash} NodeHash
- * @typedef {import("./location.d.ts").FilePath} FilePath
- * @typedef {import("./location.d.ts").Atom} Atom
- * @typedef {import("./size.d.ts").Size} Size
- * @typedef {import("./size.d.ts").SizeRegistery<import("linvail").InternalValue>} Registery
+ * @typedef {import("./location.js").NodeHash} NodeHash
+ * @typedef {import("./location.js").FilePath} FilePath
+ * @typedef {import("./location.js").Atom} Atom
  */
 
 const advice_global_variable = "__ARAN_ADVICE__";
 
 /**
  * @type {(
- *   advice: import("linvail").StandardAdvice<NodeHash>,
+ *   standard_advice: import("linvail").StandardAdvice<NodeHash>,
  *   config: {
- *     isInternalPrimitive: (
- *       value: import("linvail").InternalValue,
- *     ) => value is import("linvail").InternalPrimitive,
- *     enterPrimitive: (
- *       primitive: import("linvail").ExternalPrimitive,
- *     ) => import("linvail").InternalPrimitive,
- *     leavePrimitive: (
- *       primitive: import("linvail").InternalPrimitive,
- *     ) => import("linvail").ExternalPrimitive,
+ *     advice: import("linvail").Advice,
  *     recordBranch: (
  *       kind: import("aran").TestKind,
- *       size: Size,
+ *       prov: number,
  *       hash: NodeHash,
  *     ) => void
  *   },
  * ) => import("linvail").StandardAdvice<NodeHash>}
  */
 const updateAdvice = (
-  {
-    "primitive@after": advicePrimitiveAfter,
-    "intrinsic@after": adviceIntrinsicAfter,
-    "test@before": adviceBeforeTest,
-    "apply@around": adviceApplyAround,
-    ...advice
+  standard_advice,
+  { advice: { wrap, apply }, recordBranch },
+) => ({
+  ...standard_advice,
+  "primitive@after": (_state, value, _tag) => ({
+    type: "primitive",
+    inner: value,
+    prov: 1,
+  }),
+  "intrinsic@after": (_state, _name, value, _tag) => {
+    if (isStandardPrimitive(value)) {
+      return {
+        type: "primitive",
+        inner: value,
+        prov: 1,
+      };
+    } else {
+      return wrap(/** @type {import("linvail").Value} */ (value));
+    }
   },
-  { recordBranch, isInternalPrimitive, enterPrimitive, leavePrimitive },
-) => {
-  /**
-   * @type {Registery}
-   */
-  const registery = createSizeRegistery();
-  return {
-    ...advice,
-    "primitive@after": (state, value, tag) => {
-      const fresh = advicePrimitiveAfter(state, value, tag);
-      setAtomicSize(registery, fresh);
-      return fresh;
-    },
-    "intrinsic@after": (state, name, value, tag) => {
-      const fresh = adviceIntrinsicAfter(state, name, value, tag);
-      setAtomicSize(registery, fresh);
-      return fresh;
-    },
-    "test@before": (state, kind, value, tag) => {
-      recordBranch(kind, getSize(registery, value), tag);
-      return adviceBeforeTest(state, kind, value, tag);
-    },
-    "apply@around": (state, callee, that, input, tag) => {
-      const result = adviceApplyAround(state, callee, that, input, tag);
-      if (isInternalPrimitive(result)) {
-        const fresh = enterPrimitive(leavePrimitive(result));
-        setCompoundSize(registery, fresh, { callee, that, input, result });
-        return fresh;
-      } else {
-        return result;
+  "test@before": (_state, kind, value, tag) => {
+    recordBranch(kind, /** @type {any} */ (value).prov, tag);
+    return value.inner;
+  },
+  "apply@around": (_state, callee, that, input, _tag) => {
+    const result = apply(callee, that, input);
+    if (isStandardPrimitive(result.inner)) {
+      let prov = 1;
+      prov += /** @type {any} */ (result).prov;
+      prov += /** @type {any} */ (callee).prov;
+      prov += /** @type {any} */ (that).prov;
+      const { length } = input;
+      for (let index = 0; index < length; index++) {
+        prov += /** @type {any} */ (input[index]).prov;
       }
-    },
-  };
-};
+      return {
+        type: "primitive",
+        inner: result.inner,
+        prov,
+      };
+    } else {
+      return result;
+    }
+  },
+});
 
 /**
  * @type {(
@@ -106,7 +95,7 @@ const updateAdvice = (
  *     include: "main" | "comp",
  *     global: "internal" | "external",
  *   },
- * ) => Promise<import("../../stage.d.ts").Stage<
+ * ) => Promise<import("../../stage.js").Stage<
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
@@ -114,8 +103,8 @@ const updateAdvice = (
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
- *     index: import("../../../test-case.d.ts").TestIndex,
- *     buffer: import("./branch.d.ts").Branch[],
+ *     index: import("../../../test-case.js").TestIndex,
+ *     buffer: import("./branch.js").Branch[],
  *   },
  * >>}
  */
@@ -184,7 +173,28 @@ export const createStage = async ({ include, global }) => {
     },
     prepare: ({ buffer, record_directory }, context) => {
       const { intrinsics } = prepare(context, { record_directory });
-      const { advice } = createRuntime(intrinsics, { dir, count: false });
+      const { advice } = createRuntime(intrinsics, {
+        dir,
+        wrapPrimitive: (primitive) => ({
+          type: "primitive",
+          inner: primitive,
+          prov: 0,
+        }),
+        wrapGuestReference: (guest, apply, construct) => ({
+          type: "guest",
+          inner: guest,
+          apply,
+          construct,
+          prov: 0,
+        }),
+        wrapHostReference: (host, kind) => ({
+          type: "host",
+          inner: null,
+          kind,
+          plain: host,
+          prov: 0,
+        }),
+      });
       const actual_global = intrinsics.globalThis;
       advice.weaveEvalProgram = weave;
       if (include === "comp") {
@@ -197,8 +207,8 @@ export const createStage = async ({ include, global }) => {
             weave,
             String: intrinsics.globalThis.String,
             SyntaxError: intrinsics.globalThis.SyntaxError,
-            enterValue: advice.enterValue,
-            leaveValue: advice.leaveValue,
+            enterValue: advice.wrap,
+            leaveValue: ({ inner }) => inner,
             apply: advice.apply,
             construct: advice.construct,
             evalGlobal: /** @type {any} */ (intrinsics.globalThis.eval),
@@ -210,35 +220,32 @@ export const createStage = async ({ include, global }) => {
         );
       }
       if (global === "internal") {
-        const { internalize, leavePlainInternalReference } = advice;
-        /** @type {import("linvail").PlainExternalReference} */
+        const { toHostReferenceWrapper } = advice;
+        /** @type {import("linvail").GuestReference} */
         const plain_external_global = /** @type {any} */ (
           intrinsics.globalThis
         );
-        const plain_internal_global = internalize(plain_external_global, {
-          prototype: "global.Object.prototype",
-        });
-        const external_global = leavePlainInternalReference(
-          plain_internal_global,
+        const plain_internal_global = toHostReferenceWrapper(
+          plain_external_global,
+          { prototype: "Object.prototype" },
         );
+        const external_global = plain_internal_global.inner;
         intrinsics.globalThis = /** @type {any} */ (external_global);
         intrinsics["aran.global_object"] = /** @type {any} */ (external_global);
         intrinsics["aran.global_declarative_record"] = /** @type {any} */ (
-          leavePlainInternalReference(
-            internalize(
-              /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
-              { prototype: null },
-            ),
-          )
+          toHostReferenceWrapper(
+            /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
+            { prototype: "none" },
+          ).inner
         );
       }
       const descriptor = {
         __proto__: null,
         value: updateAdvice(toStandardAdvice(advice), {
-          ...advice,
-          recordBranch: (_kind, size, hash) => {
+          advice,
+          recordBranch: (_kind, prov, hash) => {
             const { path, type } = parseNodeHash(hash);
-            buffer.push({ path, type, size });
+            buffer.push({ path, type, prov });
           },
         }),
         enumerable: false,

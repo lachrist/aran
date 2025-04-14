@@ -90,13 +90,13 @@ export const compileStage = async ({ tracking, include }) => {
       /**
        * @type {(
        *   kind: import("aran").TestKind,
-       *   size: import("./size.d.ts").Size,
+       *   prov: number,
        *   hash: import("./location.d.ts").NodeHash,
        * ) => void}
        */
-      const recordBranch = (_kind, size, hash) => {
+      const recordBranch = (_kind, prov, hash) => {
         const { path, type } = parseNodeHash(hash);
-        buffer.push({ path, type, size });
+        buffer.push({ path, type, prov });
       };
       const {
         "globalThis": {

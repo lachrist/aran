@@ -134,7 +134,7 @@ const node_type_hash = reduceEntry(
 /**
  * @type {(
  *   content: string,
- * ) => import("./branch.d.ts").Branch[]}
+ * ) => import("./branch.js").Branch[]}
  */
 export const parseBranching = (content) => {
   const data = JSON.parse(content);
@@ -160,7 +160,7 @@ export const parseBranching = (content) => {
 
 /**
  * @type {(
- *   branches: import("./branch.d.ts").Branch[],
+ *   branches: import("./branch.js").Branch[],
  * ) => string}
  */
 export const printBranching = (branches) =>
@@ -173,7 +173,7 @@ export const printBranching = (branches) =>
       },
       (_, index) => {
         const rest = index % 3;
-        const { path, type, size } = branches[(index - rest) / 3];
+        const { path, type, prov } = branches[(index - rest) / 3];
         switch (rest) {
           case 0: {
             return typeof path === "string"
@@ -184,7 +184,7 @@ export const printBranching = (branches) =>
             return node_type_hash[type];
           }
           case 2: {
-            return size;
+            return prov;
           }
           default: {
             throw new AranExecError("Invalid rest", { rest });

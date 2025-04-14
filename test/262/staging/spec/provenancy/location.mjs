@@ -11,15 +11,15 @@ const colon = [":"];
 
 /**
  * @type {import("aran").Digest<{
- *   NodeHash: import("./location.d.ts").NodeHash,
+ *   NodeHash: import("./location.js").NodeHash,
  * }>}
  */
 export const digest = ({ type }, node_path, _file_path, _kind) =>
-  /** @type {import("./location.d.ts").NodeHash} */ (`${type}:${node_path}`);
+  /** @type {import("./location.js").NodeHash} */ (`${type}:${node_path}`);
 
 /**
  * @type {(
- *   hash: import("./location.d.ts").NodeHash,
+ *   hash: import("./location.js").NodeHash,
  * ) => {
  *   type: import("aran").EstreeNode<{}>["type"],
  *   path: import("aran").EstreeNodePath,
@@ -40,10 +40,10 @@ export const parseNodeHash = (hash) => {
 /**
  * @type {(
  *   hash: (
- *     | import("./location.d.ts").NodeHash
+ *     | import("./location.js").NodeHash
  *     | "script" | "eval" | "function"
  *   ),
- * ) => import("./location.d.ts").FilePath}
+ * ) => import("./location.js").FilePath}
  */
 export const toEvalPath = (hash) =>
-  /** @type {import("./location.d.ts").FilePath} */ (`dynamic://${hash}`);
+  /** @type {import("./location.js").FilePath} */ (`dynamic://${hash}`);

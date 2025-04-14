@@ -66,6 +66,7 @@ export const META_RECORD = {
   bare: null,
   full: null,
   track: null,
+  linvail: null,
 };
 
 /**

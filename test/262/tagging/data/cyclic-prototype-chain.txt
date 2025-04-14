@@ -1,0 +1,4 @@
+built-ins/Object/prototype/__proto__/set-cycle.js
+built-ins/Proxy/setPrototypeOf/trap-is-null-target-is-proxy.js
+built-ins/Reflect/setPrototypeOf/return-false-if-target-and-proto-are-the-same.js
+built-ins/Reflect/setPrototypeOf/return-false-if-target-is-prototype-of-proto.js

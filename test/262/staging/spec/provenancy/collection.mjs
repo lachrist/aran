@@ -18,7 +18,7 @@ const descriptor = {
 };
 
 /**
- * @type {<K extends object, V>() => import("./collection.d.ts").WeakMap<K, V>}
+ * @type {<K extends object, V>() => import("./collection.js").WeakMap<K, V>}
  */
 export const createWeakMap = () => {
   const collection = new WeakMap();
@@ -30,7 +30,7 @@ export const createWeakMap = () => {
 };
 
 /**
- * @type {<K extends object>() => import("./collection.d.ts").WeakSet<K>}
+ * @type {<K extends object>() => import("./collection.js").WeakSet<K>}
  */
 export const createWeakSet = () => {
   const collection = new WeakSet();

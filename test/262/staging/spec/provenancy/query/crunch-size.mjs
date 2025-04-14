@@ -112,8 +112,8 @@ const computeEachPercentIncrease = (nums1, nums2) => {
 
 /**
  * @typedef {number & { __brand: "Hash" }} Hash
- * @typedef {number & { __brand: "Size" }} Size
- * @typedef {Size[]} Test
+ * @typedef {number & { __brand: "Prov" }} Prov
+ * @typedef {Prov[]} Test
  * @typedef {Test[]} Suite
  * @typedef {(
  *   | "stack-main"
@@ -209,22 +209,22 @@ const loadSuiteRecord = async (names) => {
         if (lines.every(isNotEmptyString)) {
           /** @type {Hash[][]} */
           const hashing = [];
-          /** @type {Size[][]} */
+          /** @type {Prov[][]} */
           const sizing = [];
           for (let suite_index = 0; suite_index < suite_length; suite_index++) {
             /** @type {(string | number)[]} */
             const hashes = [];
             /** @type {number[]} */
-            const sizes = [];
-            for (const { path, type: _type, size } of parseBranching(
+            const provs = [];
+            for (const { path, type: _type, prov } of parseBranching(
               lines[suite_index],
             )) {
               hashes.push(path);
               // if (type === "IfStatement") {
-              sizes.push(size);
+              provs.push(prov);
               // }
             }
-            sizing.push(/** @type {Size[]} */ (sizes));
+            sizing.push(/** @type {Prov[]} */ (provs));
             hashing.push(/** @type {Hash[]} */ (hashes));
           }
           const status = verifyHashing(hashing);

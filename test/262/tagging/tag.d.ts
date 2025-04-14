@@ -2,6 +2,7 @@ export type Tag =
   | "arguments-two-way-binding"
   | "async-iterator-async-value"
   | "call-async-done-with-module"
+  | "cyclic-prototype-chain"
   | "default-array-prototype-realm"
   | "duplicate-constant-global-function"
   | "elusive-dynamic-code"

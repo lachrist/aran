@@ -44,7 +44,7 @@ const copyArraylike = (input) => {
  *   current: number,
  *   tagging: WeakMap<Value, number>,
  *   getSymbolKey: (symbol: symbol) => undefined | string,
- * }} Registery
+ * }} Registry
  * @typedef {(
  *   | Exclude<import("aran").StandardAspectKind, (
  *       | "apply@around"
@@ -138,27 +138,27 @@ const PARSING = {
 
 /**
  * @type {(
- *   registery: Registery,
+ *   registry: Registry,
  *   value: Value,
  * ) => string}
  */
-const show = (registery, value) => {
+const show = (registry, value) => {
   if (
     typeof value === "symbol" ||
     typeof value === "function" ||
     (typeof value === "object" && value !== null)
   ) {
-    let tag = registery.tagging.get(value);
+    let tag = registry.tagging.get(value);
     if (tag === undefined) {
-      tag = registery.current++;
+      tag = registry.current++;
       try {
-        registery.tagging.set(value, tag);
+        registry.tagging.set(value, tag);
       } catch (error) {
         // TypeError >> new WeakMap([Symbol.for('foo'), 123]);
         if (typeof value !== "symbol") {
           throw error;
         }
-        const key = registery.getSymbolKey(value);
+        const key = registry.getSymbolKey(value);
         if (key === undefined) {
           throw error;
         }
@@ -178,33 +178,33 @@ const show = (registery, value) => {
 
 /**
  * @type {(
- *   registery: Registery,
+ *   registry: Registry,
  *   payload: TracePayload,
  * ) => string[]}
  */
-const formatPayload = (registery, payload) => {
+const formatPayload = (registry, payload) => {
   switch (payload.type) {
     case "void": {
       return [];
     }
     case "intercept": {
       const { target: main } = payload;
-      return [show(registery, main)];
+      return [show(registry, main)];
     }
     case "call": {
       const { callee, that, input } = payload;
       const head =
-        show(registery, callee) +
-        (that === undefined ? "" : `[this=${show(registery, that)}]`);
+        show(registry, callee) +
+        (that === undefined ? "" : `[this=${show(registry, that)}]`);
       if (input.length < 4) {
         return [
-          head + "(" + input.map((value) => show(registery, value)).join(","),
+          head + "(" + input.map((value) => show(registry, value)).join(","),
           ")",
         ];
       } else {
         return [
           head + "(",
-          ...input.map((value) => "  " + show(registery, value) + ","),
+          ...input.map((value) => "  " + show(registry, value) + ","),
           ")",
         ];
       }
@@ -215,7 +215,7 @@ const formatPayload = (registery, payload) => {
         return [
           "{" +
             bindings
-              .map(({ 0: key, 1: val }) => key + ": " + show(registery, val))
+              .map(({ 0: key, 1: val }) => key + ": " + show(registry, val))
               .join(", ") +
             "}",
         ];
@@ -224,7 +224,7 @@ const formatPayload = (registery, payload) => {
           "{",
           ...bindings.map(
             ({ 0: key, 1: val }) =>
-              "  " + key + ": " + show(registery, val) + ",",
+              "  " + key + ": " + show(registry, val) + ",",
           ),
           "}",
         ];
@@ -238,14 +238,14 @@ const formatPayload = (registery, payload) => {
 
 /**
  * @type {(
- *  registery: Registery,
+ *  registry: Registry,
  *  indent: Indent,
  *  trace: Trace,
  * ) => string}
  */
-const format = (registery, indent, { kind, info, data, hash }) => {
+const format = (registry, indent, { kind, info, data, hash }) => {
   const { name, sort } = PARSING[kind];
-  const lines = formatPayload(registery, data);
+  const lines = formatPayload(registry, data);
   return [
     name.padEnd(NAME_PADDING) +
       sort +
@@ -321,8 +321,8 @@ export const createTraceAdvice = (
   weaveStandard,
   { Reflect: { apply, construct }, Symbol: { keyFor }, console: { log } },
 ) => {
-  /** @type {Registery} */
-  const registery = {
+  /** @type {Registry} */
+  const registry = {
     current: 0,
     tagging: new WeakMap(),
     getSymbolKey: keyFor,
@@ -345,7 +345,7 @@ export const createTraceAdvice = (
       }
       indent = indentControl(indent);
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "block@setup",
           info: kind,
           data: VOID,
@@ -356,7 +356,7 @@ export const createTraceAdvice = (
     },
     "block@declaration": (indent, kind, frame, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "block@declaration",
           info: kind,
           data: {
@@ -373,7 +373,7 @@ export const createTraceAdvice = (
     "program-block@before": (_indent, _kind, _head, _hash) => {},
     "generator-block@suspension": (indent, kind, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "generator-block@suspension",
           info: kind,
           data: VOID,
@@ -383,7 +383,7 @@ export const createTraceAdvice = (
     },
     "generator-block@resumption": (indent, kind, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "generator-block@resumption",
           info: kind,
           data: VOID,
@@ -393,7 +393,7 @@ export const createTraceAdvice = (
     },
     "segment-block@after": (indent, kind, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "segment-block@after",
           info: kind,
           data: VOID,
@@ -403,7 +403,7 @@ export const createTraceAdvice = (
     },
     "closure-block@after": (indent, kind, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "closure-block@after",
           info: kind,
           data: { type: "intercept", target: value },
@@ -414,7 +414,7 @@ export const createTraceAdvice = (
     },
     "program-block@after": (indent, kind, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "program-block@after",
           info: kind,
           data: { type: "intercept", target: value },
@@ -425,7 +425,7 @@ export const createTraceAdvice = (
     },
     "block@throwing": (indent, kind, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "block@throwing",
           info: kind,
           data: { type: "intercept", target: value },
@@ -436,7 +436,7 @@ export const createTraceAdvice = (
     },
     "block@teardown": (indent, kind, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "block@teardown",
           info: kind,
           data: VOID,
@@ -446,7 +446,7 @@ export const createTraceAdvice = (
     },
     "break@before": (indent, label, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "break@before",
           info: label,
           data: VOID,
@@ -457,7 +457,7 @@ export const createTraceAdvice = (
     "apply@around": (indent, callee, that, input, hash) => {
       transit_indent = indent;
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "apply@before",
           info: null,
           data: {
@@ -472,7 +472,7 @@ export const createTraceAdvice = (
       );
       const result = apply(callee, that, input);
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "apply@after",
           info: null,
           data: { type: "intercept", target: result },
@@ -484,7 +484,7 @@ export const createTraceAdvice = (
     "construct@around": (indent, callee, input, hash) => {
       transit_indent = indent;
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "construct@before",
           info: null,
           data: {
@@ -499,7 +499,7 @@ export const createTraceAdvice = (
       );
       const result = construct(callee, input);
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "construct@after",
           info: null,
           data: { type: "intercept", target: result },
@@ -510,7 +510,7 @@ export const createTraceAdvice = (
     },
     "test@before": (indent, kind, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "test@before",
           info: kind,
           data: { type: "intercept", target: value },
@@ -521,7 +521,7 @@ export const createTraceAdvice = (
     },
     "eval@before": (indent, root, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "eval@before",
           info: null,
           data: { type: "intercept", target: root },
@@ -538,7 +538,7 @@ export const createTraceAdvice = (
     },
     "eval@after": (indent, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "eval@after",
           info: null,
           data: { type: "intercept", target: value },
@@ -549,7 +549,7 @@ export const createTraceAdvice = (
     },
     "await@before": (indent, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "await@before",
           info: null,
           data: { type: "intercept", target: value },
@@ -560,7 +560,7 @@ export const createTraceAdvice = (
     },
     "await@after": (indent, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "await@after",
           info: null,
           data: { type: "intercept", target: value },
@@ -571,7 +571,7 @@ export const createTraceAdvice = (
     },
     "yield@before": (indent, delegate, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "yield@before",
           info: delegate ? "delegate" : "normal",
           data: { type: "intercept", target: value },
@@ -582,7 +582,7 @@ export const createTraceAdvice = (
     },
     "yield@after": (indent, delegate, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "yield@after",
           info: delegate ? "delegate" : "normal",
           data: { type: "intercept", target: value },
@@ -593,7 +593,7 @@ export const createTraceAdvice = (
     },
     "read@after": (indent, variable, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "read@after",
           info: variable,
           data: { type: "intercept", target: value },
@@ -604,7 +604,7 @@ export const createTraceAdvice = (
     },
     "write@before": (indent, variable, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "write@before",
           info: variable,
           data: { type: "intercept", target: value },
@@ -615,7 +615,7 @@ export const createTraceAdvice = (
     },
     "drop@before": (indent, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "drop@before",
           info: null,
           data: { type: "intercept", target: value },
@@ -626,7 +626,7 @@ export const createTraceAdvice = (
     },
     "export@before": (indent, specifier, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "export@before",
           info: specifier,
           data: { type: "intercept", target: value },
@@ -637,7 +637,7 @@ export const createTraceAdvice = (
     },
     "import@after": (indent, source, specifier, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "import@after",
           info: stringify(specifier) + " from " + stringify(source),
           data: { type: "intercept", target: value },
@@ -648,7 +648,7 @@ export const createTraceAdvice = (
     },
     "intrinsic@after": (indent, name, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "intrinsic@after",
           info: name,
           data: { type: "intercept", target: value },
@@ -659,7 +659,7 @@ export const createTraceAdvice = (
     },
     "primitive@after": (indent, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "primitive@after",
           info: null,
           data: { type: "intercept", target: value },
@@ -670,7 +670,7 @@ export const createTraceAdvice = (
     },
     "closure@after": (indent, kind, value, hash) => {
       log(
-        format(registery, indent, {
+        format(registry, indent, {
           kind: "closure@after",
           info: kind,
           data: { type: "intercept", target: value },

@@ -1,3 +1,5 @@
 /coverage/
 /node_modules/
 /vendor/
+/octane/
+/test262/
