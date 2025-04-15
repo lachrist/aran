@@ -1,24 +1,18 @@
 import { open } from "node:fs/promises";
+import { dir as dirNode } from "node:console";
 import { weaveStandard } from "aran";
-import {
-  createRuntime,
-  standard_pointcut as pointcut,
-  toStandardAdvice,
-} from "linvail/runtime";
+import { standard_pointcut as pointcut } from "linvail/runtime";
 import { compileAran } from "../../aran.mjs";
 import { record } from "../../../record/index.mjs";
 import { compileListPrecursorFailure } from "../../failure.mjs";
 import { compileListThresholdExclusion } from "./threshold.mjs";
-import { compileInterceptEval } from "../../helper.mjs";
 import { printBranching } from "./branching.mjs";
 import { digest, parseNodeHash, toEvalPath } from "./location.mjs";
-import { isStandardPrimitive } from "./primitive.mjs";
+import { createAdvice } from "./track-store-aspect.mjs";
 
 const {
   URL,
-  Object: { assign },
   Reflect: { defineProperty },
-  console: { dir },
 } = globalThis;
 
 /**
@@ -28,66 +22,6 @@ const {
  */
 
 const advice_global_variable = "__ARAN_ADVICE__";
-
-/**
- * @type {(
- *   standard_advice: import("linvail").StandardAdvice<NodeHash>,
- *   config: {
- *     advice: import("linvail").Advice,
- *     recordBranch: (
- *       kind: import("aran").TestKind,
- *       prov: number,
- *       hash: NodeHash,
- *     ) => void
- *   },
- * ) => import("linvail").StandardAdvice<NodeHash>}
- */
-const updateAdvice = (
-  standard_advice,
-  { advice: { wrap, apply }, recordBranch },
-) => ({
-  ...standard_advice,
-  "primitive@after": (_state, value, _tag) => ({
-    type: "primitive",
-    inner: value,
-    prov: 1,
-  }),
-  "intrinsic@after": (_state, _name, value, _tag) => {
-    if (isStandardPrimitive(value)) {
-      return {
-        type: "primitive",
-        inner: value,
-        prov: 1,
-      };
-    } else {
-      return wrap(/** @type {import("linvail").Value} */ (value));
-    }
-  },
-  "test@before": (_state, kind, value, tag) => {
-    recordBranch(kind, /** @type {any} */ (value).prov, tag);
-    return value.inner;
-  },
-  "apply@around": (_state, callee, that, input, _tag) => {
-    const result = apply(callee, that, input);
-    if (isStandardPrimitive(result.inner)) {
-      let prov = 1;
-      prov += /** @type {any} */ (result).prov;
-      prov += /** @type {any} */ (callee).prov;
-      prov += /** @type {any} */ (that).prov;
-      const { length } = input;
-      for (let index = 0; index < length; index++) {
-        prov += /** @type {any} */ (input[index]).prov;
-      }
-      return {
-        type: "primitive",
-        inner: result.inner,
-        prov,
-      };
-    } else {
-      return result;
-    }
-  },
-});
 
 /**
  * @type {(
@@ -173,81 +107,28 @@ export const createStage = async ({ include, global }) => {
     },
     prepare: ({ buffer, record_directory }, context) => {
       const { intrinsics } = prepare(context, { record_directory });
-      const { advice } = createRuntime(intrinsics, {
-        dir,
-        wrapPrimitive: (primitive) => ({
-          type: "primitive",
-          inner: primitive,
-          prov: 0,
-        }),
-        wrapGuestReference: (guest, apply, construct) => ({
-          type: "guest",
-          inner: guest,
-          apply,
-          construct,
-          prov: 0,
-        }),
-        wrapHostReference: (host, kind) => ({
-          type: "host",
-          inner: null,
-          kind,
-          plain: host,
-          prov: 0,
-        }),
-      });
       const actual_global = intrinsics.globalThis;
-      advice.weaveEvalProgram = weave;
-      if (include === "comp") {
-        assign(
-          advice,
-          compileInterceptEval({
-            toEvalPath,
-            trans,
-            retro,
-            weave,
-            String: intrinsics.globalThis.String,
-            SyntaxError: intrinsics.globalThis.SyntaxError,
-            enterValue: advice.wrap,
-            leaveValue: ({ inner }) => inner,
-            apply: advice.apply,
-            construct: advice.construct,
-            evalGlobal: /** @type {any} */ (intrinsics.globalThis.eval),
-            evalScript: /** @type {any} */ (intrinsics.globalThis).$262
-              .evalScript,
-            Function: /** @type {any} */ (intrinsics.globalThis.Function),
-            record_directory,
-          }),
-        );
-      }
-      if (global === "internal") {
-        const { toHostReferenceWrapper } = advice;
-        /** @type {import("linvail").GuestReference} */
-        const plain_external_global = /** @type {any} */ (
-          intrinsics.globalThis
-        );
-        const plain_internal_global = toHostReferenceWrapper(
-          plain_external_global,
-          { prototype: "Object.prototype" },
-        );
-        const external_global = plain_internal_global.inner;
-        intrinsics.globalThis = /** @type {any} */ (external_global);
-        intrinsics["aran.global_object"] = /** @type {any} */ (external_global);
-        intrinsics["aran.global_declarative_record"] = /** @type {any} */ (
-          toHostReferenceWrapper(
-            /** @type {any} */ (intrinsics["aran.global_declarative_record"]),
-            { prototype: "none" },
-          ).inner
-        );
-      }
+      const advice = createAdvice({
+        instrument_dynamic_code: include === "comp",
+        internalize_global_scope: global === "internal",
+        dir: (value) => {
+          dirNode(value, { showProxy: true, showHidden: true });
+        },
+        evalScript: /** @type {any} */ (intrinsics.globalThis).$262.evalScript,
+        intrinsics,
+        retro,
+        trans,
+        weave,
+        recordBranch: (_kind, prov, hash) => {
+          const { path, type } = parseNodeHash(hash);
+          buffer.push({ path, type, prov });
+        },
+        toEvalPath,
+        record_directory,
+      });
       const descriptor = {
         __proto__: null,
-        value: updateAdvice(toStandardAdvice(advice), {
-          advice,
-          recordBranch: (_kind, prov, hash) => {
-            const { path, type } = parseNodeHash(hash);
-            buffer.push({ path, type, prov });
-          },
-        }),
+        value: advice,
         enumerable: false,
         writable: false,
         configurable: false,
