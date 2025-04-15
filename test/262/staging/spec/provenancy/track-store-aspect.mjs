@@ -1,10 +1,12 @@
-import { createRuntime, toStandardAdvice } from "linvail/runtime";
+import {
+  createRuntime,
+  toStandardAdvice,
+  standard_pointcut as pointcut,
+} from "linvail/runtime";
 import { compileInterceptEval } from "../../helper.mjs";
 import { isStandardPrimitive } from "./primitive.mjs";
-
-const {
-  console: { dir },
-} = globalThis;
+import { weaveStandard } from "aran";
+import { advice_global_variable } from "./globals.mjs";
 
 /**
  * @typedef {import("./location.js").NodeHash} NodeHash
@@ -79,6 +81,18 @@ const unwrap = ({ inner }) => inner;
 
 /**
  * @type {(
+ *   root: import("aran").Program<Atom>,
+ * ) => import("aran").Program<Atom>}
+ */
+export const weave = (root) =>
+  weaveStandard(root, {
+    advice_global_variable,
+    pointcut,
+    initial_state: null,
+  });
+
+/**
+ * @type {(
  *   config: {
  *     dir: (value: unknown) => void,
  *     internalize_global_scope: boolean,
@@ -89,9 +103,6 @@ const unwrap = ({ inner }) => inner;
  *       path: FilePath,
  *       kind: "eval" | "module" | "script",
  *       code: string,
- *     ) => import("aran").Program<Atom>,
- *     weave: (
- *       root: import("aran").Program<Atom>,
  *     ) => import("aran").Program<Atom>,
  *     retro: (
  *       root: import("aran").Program<Atom>,
@@ -115,9 +126,9 @@ const unwrap = ({ inner }) => inner;
  * }>}
  */
 export const createAdvice = ({
+  dir,
   toEvalPath,
   trans,
-  weave,
   retro,
   internalize_global_scope,
   instrument_dynamic_code,
@@ -127,9 +138,7 @@ export const createAdvice = ({
   intrinsics,
 }) => {
   const { advice } = createRuntime(intrinsics, {
-    dir: (value) => {
-      dir(value, { depth: 5, showProxy: true, showHidden: true });
-    },
+    dir,
     wrapPrimitive,
     wrapGuestReference,
     wrapHostReference,

@@ -1,14 +1,13 @@
 import { open } from "node:fs/promises";
 import { dir as dirNode } from "node:console";
-import { weaveStandard } from "aran";
-import { standard_pointcut as pointcut } from "linvail/runtime";
 import { compileAran } from "../../aran.mjs";
 import { record } from "../../../record/index.mjs";
 import { compileListPrecursorFailure } from "../../failure.mjs";
 import { compileListThresholdExclusion } from "./threshold.mjs";
 import { printBranching } from "./branching.mjs";
 import { digest, parseNodeHash, toEvalPath } from "./location.mjs";
-import { createAdvice } from "./track-store-aspect.mjs";
+import { createAdvice, weave } from "./track-store-aspect.mjs";
+import { advice_global_variable } from "./globals.mjs";
 
 const {
   URL,
@@ -20,8 +19,6 @@ const {
  * @typedef {import("./location.d.ts").FilePath} FilePath
  * @typedef {import("./location.d.ts").Atom} Atom
  */
-
-const advice_global_variable = "__ARAN_ADVICE__";
 
 /**
  * @type {(
@@ -57,17 +54,7 @@ export const createStage = async ({ include, global }) => {
     },
     toEvalPath,
   );
-  /**
-   * @type {(
-   *   root: import("aran").Program<Atom>,
-   * ) => import("aran").Program<Atom>}
-   */
-  const weave = (root) =>
-    weaveStandard(root, {
-      advice_global_variable,
-      pointcut,
-      initial_state: null,
-    });
+
   const listThresholdExclusion = await compileListThresholdExclusion(include);
   return {
     open: async ({ record_directory }) => ({
@@ -118,7 +105,6 @@ export const createStage = async ({ include, global }) => {
         intrinsics,
         retro,
         trans,
-        weave,
         recordBranch: (_kind, prov, hash) => {
           const { path, type } = parseNodeHash(hash);
           buffer.push({ path, type, prov });

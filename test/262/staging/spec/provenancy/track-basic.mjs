@@ -1,15 +1,12 @@
 import { compileAran } from "../../aran.mjs";
 import { record } from "../../../record/index.mjs";
-import {
-  advice_global_variable,
-  createAdvice,
-  compileWeave,
-} from "./track-basic-aspect.mjs";
+import { createAdvice, weave } from "./track-basic-aspect.mjs";
 import { open } from "node:fs/promises";
 import { compileListPrecursorFailure } from "../../failure.mjs";
 import { compileListThresholdExclusion } from "./threshold.mjs";
 import { printBranching } from "./branching.mjs";
 import { digest, parseNodeHash, toEvalPath } from "./location.mjs";
+import { advice_global_variable } from "./globals.mjs";
 
 const {
   URL,
@@ -50,7 +47,6 @@ export const compileStage = async ({ tracking, include }) => {
     },
     toEvalPath,
   );
-  const weave = compileWeave(tracking);
   const listThresholdExclusion = await compileListThresholdExclusion(include);
   return {
     open: async ({ record_directory }) => ({
@@ -102,7 +98,6 @@ export const compileStage = async ({ tracking, include }) => {
         instrument_dynamic_code: include === "comp",
         toEvalPath,
         trans,
-        weave,
         retro,
         // eslint-disable-next-line object-shorthand
         intrinsics: /** @type {any} */ (intrinsics),
@@ -134,7 +129,7 @@ export const compileStage = async ({ tracking, include }) => {
           kind,
           code1,
         );
-        const root2 = weave(root1);
+        const root2 = weave(root1, { tracking });
         const code2 = retro(root2);
         return record({ path, content: code2 }, record_directory);
       } else {

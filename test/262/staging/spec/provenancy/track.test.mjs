@@ -1,15 +1,21 @@
 import { deepStrictEqual as assertDeepEqual } from "node:assert";
+import { dir } from "node:console";
 import { parse } from "acorn";
 import { generate } from "astring";
 import { setupile, transpile, retropile } from "aran";
 import {
-  advice_global_variable,
-  compileWeave,
-  createAdvice,
+  weave as weaveBasic,
+  createAdvice as createBasicAdvice,
 } from "./track-basic-aspect.mjs";
+import {
+  weave as weaveStore,
+  createAdvice as createStoreAdvice,
+} from "./track-store-aspect.mjs";
 import { toEvalPath, digest } from "./location.mjs";
+import { AranTypeError } from "../../../error.mjs";
+import { advice_global_variable } from "./globals.mjs";
 
-const { Error, eval: evalGlobal } = globalThis;
+const { Error, eval: evalGlobal, JSON } = globalThis;
 
 /**
  * @typedef {{
@@ -70,63 +76,94 @@ const evalScript = (_code) => {
  * @type {(
  *   code: string,
  *   config: {
- *     tracking: "stack" | "intra" | "inter",
+ *     tracking: "stack" | "intra" | "inter" | "store",
  *     include: "main" | "comp",
  *   },
  * ) => Branch[]}
  */
 const test = (code, { tracking, include }) => {
-  const trans = compileTrans(include === "comp" ? "emulate" : "builtin");
+  const global_declarative_record = include === "comp" ? "emulate" : "builtin";
+  const trans = compileTrans(global_declarative_record);
   /** @type {import("aran").IntrinsicRecord} */
   const intrinsics = evalGlobal(generate(setupile({})));
-  intrinsics["aran.transpileEvalCode"] = (/** @type {string} */ code) =>
-    trans(
-      /** @type {import("./track-basic-aspect.mjs").FilePath} */ (
-        "dynamic://eval/local"
-      ),
-      "eval",
-      code,
+  intrinsics["aran.transpileEvalCode"] = (code, situ, hash) =>
+    transpile(
+      {
+        kind: "eval",
+        path: `dynamic://eval/local#${hash}`,
+        situ: JSON.parse(situ),
+        root: parse(code, {
+          sourceType: "script",
+          ecmaVersion: "latest",
+        }),
+      },
+      { digest, global_declarative_record },
     );
   intrinsics["aran.retropileEvalCode"] = retro;
   /** @type {Branch[]} */
   const branches = [];
-  const weave = compileWeave(tracking);
-  setAdvice(
-    createAdvice({
-      toEvalPath,
-      trans,
-      retro,
-      weave,
-      // eslint-disable-next-line object-shorthand
-      intrinsics: /** @type {any} */ (intrinsics),
-      // eslint-disable-next-line object-shorthand
-      evalScript: /** @type {any} */ (evalScript),
-      instrument_dynamic_code: include === "comp",
-      tracking,
-      recordBranch: (kind, prov, tag) => {
-        branches.push({ kind, prov, tag });
-      },
-      record_directory: null,
-    }),
+  /**
+   * @type {(
+   *   kind: import("aran").TestKind,
+   *   prov: number,
+   *   tag: string,
+   * ) => void}
+   */
+  const recordBranch = (kind, prov, tag) => {
+    branches.push({ kind, prov, tag });
+  };
+  let root = trans(
+    /** @type {import("./track-basic-aspect.mjs").FilePath} */ ("main"),
+    "eval",
+    code,
   );
-  evalGlobal(
-    retro(
-      weave(
-        trans(
-          /** @type {import("./track-basic-aspect.mjs").FilePath} */ ("main"),
-          "eval",
-          code,
-        ),
-      ),
-    ),
-  );
+  if (tracking === "stack" || tracking === "intra" || tracking === "inter") {
+    setAdvice(
+      createBasicAdvice({
+        toEvalPath,
+        trans,
+        retro,
+        // eslint-disable-next-line object-shorthand
+        intrinsics: /** @type {any} */ (intrinsics),
+        // eslint-disable-next-line object-shorthand
+        evalScript: /** @type {any} */ (evalScript),
+        instrument_dynamic_code: include === "comp",
+        tracking,
+        recordBranch,
+        record_directory: null,
+      }),
+    );
+    root = weaveBasic(root, { tracking });
+  } else if (tracking === "store") {
+    setAdvice(
+      createStoreAdvice({
+        toEvalPath,
+        trans,
+        retro,
+        // eslint-disable-next-line object-shorthand
+        evalScript: /** @type {any} */ (evalScript),
+        dir: (value) => {
+          dir(value, { showProxy: true, showHidden: true });
+        },
+        internalize_global_scope: include === "comp",
+        instrument_dynamic_code: include === "comp",
+        record_directory: null,
+        recordBranch,
+        intrinsics,
+      }),
+    );
+    root = weaveStore(root);
+  } else {
+    throw new AranTypeError(tracking);
+  }
+  evalGlobal(retro(root));
   return branches;
 };
 
 /**
  * @type {(
  *   config: {
- *     tracking: "stack" | "inter" | "intra",
+ *     tracking: "stack" | "inter" | "intra" | "store",
  *     include: "main" | "comp",
  *   },
  * ) => void}
@@ -189,12 +226,17 @@ const testSuite = ({ tracking, include }) => {
     [
       {
         kind: "conditional",
-        prov:
-          /* apply offset (getValueProperty) */ 1 +
-          /* res = 123 */ 0 +
-          /* this = undefined */ 1 +
-          /* arg1 = {foo:123} */ 0 +
-          /* arg2 = "foo" */ 1,
+        prov: {
+          stack:
+            /* apply offset (getValueProperty) */ 1 +
+            /* res = 123 */ 0 +
+            /* this = undefined */ 1 +
+            /* arg1 = {foo:123} */ 0 +
+            /* arg2 = "foo" */ 1,
+          intra: 3,
+          inter: 3,
+          store: 4,
+        }[tracking],
         tag: "ConditionalExpression:$.body.0.expression",
       },
     ],
@@ -203,12 +245,17 @@ const testSuite = ({ tracking, include }) => {
   assertDeepEqual(test("([123][0] ? null : null);", { tracking, include }), [
     {
       kind: "conditional",
-      prov:
-        /* apply offset (getValueProperty) */ 1 +
-        /* res = 123 */ 0 +
-        /* this = undefined */ 1 +
-        /* arg1 = [123] */ 0 +
-        /* arg2 = 0 */ 1,
+      prov: {
+        stack:
+          /* apply offset (getValueProperty) */ 1 +
+          /* res = 123 */ 0 +
+          /* this = undefined */ 1 +
+          /* arg1 = [123] */ 0 +
+          /* arg2 = 0 */ 1,
+        intra: 3,
+        inter: 3,
+        store: 4,
+      }[tracking],
       tag: "ConditionalExpression:$.body.0.expression",
     },
   ]);
@@ -249,6 +296,7 @@ const testSuite = ({ tracking, include }) => {
             /* arg0 = &input */ 0 +
             /* arg1 = 0 */ 1 +
             0,
+          store: 8,
         }[tracking],
         tag: "ConditionalExpression:$.body.0.body.0.declarations.0.init.body",
       },
@@ -263,7 +311,7 @@ const testSuite = ({ tracking, include }) => {
     [
       {
         kind: "conditional",
-        prov: { stack: 2, intra: 2, inter: 2 + 5 }[tracking],
+        prov: { stack: 2, intra: 2, inter: 2 + 5, store: 7 }[tracking],
         tag: "ConditionalExpression:$.body.0.body.1.expression",
       },
     ],
@@ -277,7 +325,7 @@ const testSuite = ({ tracking, include }) => {
     [
       {
         kind: "conditional",
-        prov: { stack: 2, intra: 2, inter: 2 + 5 }[tracking],
+        prov: { stack: 2, intra: 2, inter: 2 + 5, store: 7 }[tracking],
         tag: "ConditionalExpression:$.body.0.body.1.expression",
       },
     ],
@@ -352,7 +400,7 @@ const testSuite = ({ tracking, include }) => {
           },
           {
             kind: "conditional",
-            prov: { stack: 4, intra: 4, inter: 5 }[tracking],
+            prov: { stack: 4, intra: 4, inter: 5, store: 5 }[tracking],
             tag: "FunctionExpression:$.body.0.expression",
           },
           {
@@ -372,7 +420,7 @@ const testSuite = ({ tracking, include }) => {
           },
           {
             kind: "conditional",
-            prov: { stack: 4, intra: 4, inter: 15 }[tracking],
+            prov: { stack: 4, intra: 4, inter: 15, store: 15 }[tracking],
             tag: "ConditionalExpression:$.body.0.expression",
           },
         ],
@@ -385,3 +433,53 @@ testSuite({ tracking: "intra", include: "main" });
 testSuite({ tracking: "intra", include: "comp" });
 testSuite({ tracking: "inter", include: "main" });
 testSuite({ tracking: "inter", include: "comp" });
+testSuite({ tracking: "store", include: "main" });
+testSuite({ tracking: "store", include: "comp" });
+
+assertDeepEqual(
+  test("this.foo = 123; (foo ? 456 : 789);", {
+    tracking: "store",
+    include: "main",
+  }),
+  [
+    {
+      kind: "conditional",
+      prov: 4,
+      tag: "AssignmentExpression:$.body.0.expression",
+    },
+    {
+      kind: "conditional",
+      prov: 3,
+      tag: "ConditionalExpression:$.body.1.expression",
+    },
+  ],
+);
+
+assertDeepEqual(
+  test("this.bar = 123; (bar ? 456 : 789);", {
+    tracking: "store",
+    include: "comp",
+  }),
+  [
+    {
+      kind: "conditional",
+      prov: 4,
+      tag: "AssignmentExpression:$.body.0.expression",
+    },
+    {
+      kind: "conditional",
+      prov: 3,
+      tag: "Identifier:$.body.1.expression.test",
+    },
+    {
+      kind: "conditional",
+      prov: 3,
+      tag: "Identifier:$.body.1.expression.test",
+    },
+    {
+      kind: "conditional",
+      prov: 4,
+      tag: "ConditionalExpression:$.body.1.expression",
+    },
+  ],
+);

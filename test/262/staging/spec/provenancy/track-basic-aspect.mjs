@@ -3,6 +3,7 @@ import { AranExecError } from "../../../error.mjs";
 import { compileInterceptEval, listKey, map } from "../../helper.mjs";
 import { createWeakMap } from "./collection.mjs";
 import { isPrimitive, isStandardPrimitive } from "./primitive.mjs";
+import { advice_global_variable } from "./globals.mjs";
 
 const {
   Error,
@@ -10,6 +11,7 @@ const {
 } = globalThis;
 
 /**
+ * @typedef {"stack" | "intra" | "inter"} Tracking
  * @typedef {{__brand: "Reference"}} Reference
  * @typedef {undefined | null | boolean | number | bigint | string} StandardPrimitive
  * @typedef {StandardPrimitive | symbol} Primitive
@@ -86,7 +88,13 @@ const {
  * }} KindResult
  */
 
-export const advice_global_variable = "__aran_advice__";
+const external_program_transit = false;
+
+const internal_program_transit = true;
+
+//////////////
+// Pointcut //
+//////////////
 
 /**
  * @type {{ [k in AspectKind]: null }}
@@ -129,31 +137,19 @@ const remove = {
 
 /**
  * @type {(
- *   tracking: "stack" | "intra" | "inter",
+ *   tracking: Tracking,
  * ) => AspectKind[]}
  */
-export const getPointcut = (tracking) =>
+export const createPointcut = (tracking) =>
   listKey(pointcut_record).filter((kind) => !hasOwn(remove[tracking], kind));
 
-const external_program_transit = false;
-
-const internal_program_transit = true;
-
 /**
- * @type {(
- *   tracking: "stack" | "intra" | "inter",
- * ) => (
- *   root: import("aran").Program<Atom>,
- * ) => import("aran").Program<Atom>}
+ * @type {{[k in Tracking]: AspectKind[]}}
  */
-export const compileWeave = (tracking) => {
-  const pointcut = getPointcut(tracking);
-  return (root) =>
-    weaveStandard(root, {
-      advice_global_variable,
-      initial_state: external_program_transit,
-      pointcut,
-    });
+const pointcuts = {
+  stack: createPointcut("stack"),
+  intra: createPointcut("intra"),
+  inter: createPointcut("inter"),
 };
 
 ////////////
@@ -300,8 +296,21 @@ const unwrap = ({ inner }) => inner;
 
 /**
  * @type {(
+ *   root: import("aran").Program<Atom>,
+ *   options: { tracking: Tracking },
+ * ) => import("aran").Program<Atom>}
+ */
+export const weave = (root, tracking) =>
+  weaveStandard(root, {
+    advice_global_variable,
+    pointcut: pointcuts[tracking.tracking],
+    initial_state: external_program_transit,
+  });
+
+/**
+ * @type {(
  *   config: {
- *     tracking: "stack" | "intra" | "inter",
+ *     tracking: Tracking,
  *     toEvalPath: (
  *       hash: NodeHash | "script" | "eval" | "function",
  *     ) => FilePath,
@@ -309,9 +318,6 @@ const unwrap = ({ inner }) => inner;
  *       path: FilePath,
  *       kind: "eval" | "module" | "script",
  *       code: string,
- *     ) => import("aran").Program<Atom>,
- *     weave: (
- *       root: import("aran").Program<Atom>,
  *     ) => import("aran").Program<Atom>,
  *     retro: (
  *       root: import("aran").Program<Atom>,
@@ -375,7 +381,6 @@ const unwrap = ({ inner }) => inner;
  */
 export const createAdvice = ({
   toEvalPath,
-  weave,
   trans,
   retro,
   evalScript,
@@ -395,7 +400,6 @@ export const createAdvice = ({
     },
   },
 }) => {
-  const pointcut = getPointcut(tracking);
   /** @type {Registry} */
   const registry = createWeakMap();
   let transit = false;
@@ -463,7 +467,12 @@ export const createAdvice = ({
   const { apply, construct } = instrument_dynamic_code
     ? compileInterceptEval({
         toEvalPath,
-        weave,
+        weave: (root) =>
+          weaveStandard(root, {
+            advice_global_variable,
+            pointcut: pointcuts[tracking],
+            initial_state: external_program_transit,
+          }),
         trans,
         retro,
         evalGlobal,
@@ -609,7 +618,7 @@ export const createAdvice = ({
       const root2 = weaveStandard(root1, {
         advice_global_variable,
         initial_state: internal_program_transit,
-        pointcut,
+        pointcut: pointcuts[tracking],
       });
       return /** @type {Value} */ (/** @type {unknown} */ (root2));
     },
