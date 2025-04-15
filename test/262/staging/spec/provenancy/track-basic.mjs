@@ -98,44 +98,18 @@ export const compileStage = async ({ tracking, include }) => {
         const { path, type } = parseNodeHash(hash);
         buffer.push({ path, type, prov });
       };
-      const {
-        "globalThis": {
-          String,
-          SyntaxError,
-          Array: { of },
-          Reflect: { apply, construct },
-          Function,
-          eval: evalGlobal,
-          $262: { evalScript },
-        },
-        "aran.getValueProperty": getValueProperty,
-      } = /**
-       * @type {{
-       *   globalThis: (
-       *     & {[key in keyof typeof globalThis]: any}
-       *     & { $262: { evalScript: any } }
-       *   ),
-       *   "aran.getValueProperty": any,
-       * }}
-       */ (/** @type {unknown} */ (intrinsics));
       const advice = createAdvice({
         instrument_dynamic_code: include === "comp",
         toEvalPath,
         trans,
         weave,
         retro,
-        apply,
-        construct,
-        createArray: (values) => apply(of, null, values),
-        getValueProperty,
+        // eslint-disable-next-line object-shorthand
+        intrinsics: /** @type {any} */ (intrinsics),
         tracking,
         record_directory,
         recordBranch,
-        Function,
-        evalGlobal,
-        evalScript,
-        String,
-        SyntaxError,
+        evalScript: /** @type {any} */ (intrinsics.globalThis).$262.evalScript,
       });
       const descriptor = {
         __proto__: null,

@@ -60,6 +60,13 @@ const compileTrans = (global_declarative_record) => (path, kind, code) =>
 const retro = (root) => generate(retropile(root, { mode: "normal" }));
 
 /**
+ * @type {(code: string) => never}
+ */
+const evalScript = (_code) => {
+  throw new Error("evalScript");
+};
+
+/**
  * @type {(
  *   code: string,
  *   config: {
@@ -90,29 +97,11 @@ const test = (code, { tracking, include }) => {
       trans,
       retro,
       weave,
-      apply: /** @type {(target: any, that: any, input: any[]) => any} */ (
-        globalThis.Reflect.apply
-      ),
-      construct: /** @type {(target: any, input: any[]) => any} */ (
-        globalThis.Reflect.construct
-      ),
-      getValueProperty: /** @type {(obj: any, key: any) => any} */ (
-        intrinsics["aran.getValueProperty"]
-      ),
-      createArray: /** @type {(...values: any[]) => any} */ (
-        (values) => values
-      ),
-      Function: /** @type {any} */ (globalThis.Function),
-      // eslint-disable-next-line no-eval
-      evalGlobal: /** @type {any} */ (globalThis.eval),
-      evalScript: /** @type {any} */ (
-        (/** @type {string} */ _code) => {
-          throw new Error("evalScript");
-        }
-      ),
+      // eslint-disable-next-line object-shorthand
+      intrinsics: /** @type {any} */ (intrinsics),
+      // eslint-disable-next-line object-shorthand
+      evalScript: /** @type {any} */ (evalScript),
       instrument_dynamic_code: include === "comp",
-      SyntaxError: globalThis.SyntaxError,
-      String: globalThis.String,
       tracking,
       recordBranch: (kind, prov, tag) => {
         branches.push({ kind, prov, tag });
@@ -255,7 +244,7 @@ const testSuite = ({ tracking, include }) => {
             0,
           inter:
             /* apply getValueProperty */ 1 +
-            /* res = 5 */ 4 +
+            /* res = 5 */ 5 +
             /* this = undefined */ 1 +
             /* arg0 = &input */ 0 +
             /* arg1 = 0 */ 1 +
@@ -274,7 +263,7 @@ const testSuite = ({ tracking, include }) => {
     [
       {
         kind: "conditional",
-        prov: { stack: 2, intra: 2, inter: 8 }[tracking],
+        prov: { stack: 2, intra: 2, inter: 2 + 5 }[tracking],
         tag: "ConditionalExpression:$.body.0.body.1.expression",
       },
     ],
@@ -288,7 +277,7 @@ const testSuite = ({ tracking, include }) => {
     [
       {
         kind: "conditional",
-        prov: { stack: 2, intra: 2, inter: 8 }[tracking],
+        prov: { stack: 2, intra: 2, inter: 2 + 5 }[tracking],
         tag: "ConditionalExpression:$.body.0.body.1.expression",
       },
     ],
@@ -358,32 +347,32 @@ const testSuite = ({ tracking, include }) => {
       : [
           {
             kind: "conditional",
-            prov: 1,
+            prov: 0,
             tag: "FunctionExpression:$.body.0.expression",
           },
           {
             kind: "conditional",
-            prov: 6,
+            prov: { stack: 4, intra: 4, inter: 5 }[tracking],
             tag: "FunctionExpression:$.body.0.expression",
           },
           {
             kind: "conditional",
-            prov: 4,
+            prov: 3,
             tag: "Identifier:$.body.0.expression.params.0",
           },
           {
             kind: "conditional",
-            prov: 4,
+            prov: 3,
             tag: "Identifier:$.body.0.expression.params.1",
           },
           {
             kind: "conditional",
-            prov: 1,
+            prov: 0,
             tag: "FunctionExpression:$.body.0.expression",
           },
           {
             kind: "conditional",
-            prov: { stack: 5, intra: 5, inter: 16 }[tracking],
+            prov: { stack: 4, intra: 4, inter: 15 }[tracking],
             tag: "ConditionalExpression:$.body.0.expression",
           },
         ],

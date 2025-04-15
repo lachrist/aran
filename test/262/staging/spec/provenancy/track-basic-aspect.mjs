@@ -316,45 +316,53 @@ const unwrap = ({ inner }) => inner;
  *     retro: (
  *       root: import("aran").Program<Atom>,
  *     ) => string,
- *     evalGlobal: Value & ((code: string) => Value),
- *     evalScript: Value & ((code: string) => Value),
- *     Function: Value,
- *     SyntaxError: new (message: string) => unknown,
- *     String: (external: Value) => string,
  *     instrument_dynamic_code: boolean,
- *     apply: {
- *       (
- *         callee: Value,
- *         that: Value,
- *         args: Value[],
- *       ): Value;
- *       (
- *         callee: Wrapper,
- *         that: Wrapper,
- *         args: Wrapper[],
- *       ): Wrapper | Value;
- *     },
- *     construct: {
- *       (
- *         callee: Value,
- *         args: Value[],
- *       ): Reference;
- *       (
- *         callee: Wrapper,
- *         args: Wrapper[],
- *       ): Reference;
- *     },
- *     createArray: (values: Value[]) => Reference,
- *     getValueProperty: (
- *       object: Value,
- *       key: Value,
- *     ) => Value,
  *     record_directory: null | URL,
  *     recordBranch: (
  *       kind: import("aran").TestKind,
  *       prov: number,
  *       tag: NodeHash,
  *     ) => void,
+ *     evalScript: Value & ((code: string) => Value),
+ *     intrinsics: {
+ *       "aran.getValueProperty": (
+ *         object: Value,
+ *         key: Value,
+ *       ) => Value,
+ *       "globalThis": {
+ *         eval: Value & ((code: string) => Value),
+ *         Function: Value,
+ *         SyntaxError: new (message: string) => unknown,
+ *         String: (external: Value) => string,
+ *         Array: {
+ *           of: Value,
+ *         },
+ *         Reflect: {
+ *           apply: {
+ *             (
+ *               callee: Value,
+ *               that: Value,
+ *               args: Value[],
+ *             ): Value;
+ *             (
+ *               callee: Value,
+ *               that: Wrapper,
+ *               args: Wrapper[],
+ *             ): Wrapper | Value;
+ *           },
+ *           construct: {
+ *             (
+ *               callee: Value,
+ *               args: Value[],
+ *             ): Reference;
+ *             (
+ *               callee: Value,
+ *               args: Wrapper[],
+ *             ): Reference;
+ *           },
+ *         },
+ *       },
+ *     },
  *   },
  * ) => import("aran").StandardAdvice<{
  *   State: boolean,
@@ -370,19 +378,22 @@ export const createAdvice = ({
   weave,
   trans,
   retro,
-  SyntaxError,
-  String,
-  evalGlobal,
   evalScript,
-  Function,
   instrument_dynamic_code,
-  apply: applyInner,
-  construct: constructInner,
-  getValueProperty,
-  createArray,
   recordBranch,
   record_directory,
   tracking,
+  intrinsics: {
+    "aran.getValueProperty": getValueProperty,
+    "globalThis": {
+      eval: evalGlobal,
+      SyntaxError,
+      String,
+      Function,
+      Reflect: { apply: applyInner, construct: constructInner },
+      Array: { of: createArray },
+    },
+  },
 }) => {
   const pointcut = getPointcut(tracking);
   /** @type {Registry} */
@@ -397,16 +408,19 @@ export const createAdvice = ({
    */
   const applyOuter = (callee, that, input) => {
     if (
-      is(callee, getValueProperty) &&
+      is(callee.inner, getValueProperty) &&
       input.length === 2 &&
       input[0].type === "reference" &&
       input[0].kind === "input" &&
-      typeof input[1] === "number" &&
-      input[1] < input[0].init.length
+      input[1].type === "primitive" &&
+      typeof input[1].inner === "number" &&
+      input[1].inner < input[0].init.length &&
+      input[1].inner <
+        /** @type {number} */ (getValueProperty(input[0].inner, "length"))
     ) {
-      const wrapper = input[0].init[input[1]];
-      const inner = input[0][input[1]];
-      return is(wrapper.inner, inner) ? wrapper : wrap(registry, inner);
+      const wrapper = input[0].init[input[1].inner];
+      const result = getValueProperty(input[0].inner, input[1].inner);
+      return is(wrapper.inner, result) ? wrapper : wrap(registry, result);
     }
     if (
       callee.type === "reference" &&
@@ -417,7 +431,7 @@ export const createAdvice = ({
       //   - Apply cannot throw before reaching block@declaration-overwrite.
       //   - It cannot be a Proxy as it directly comes from a literal closure.
       transit = true;
-      const result = applyInner(callee, that, input);
+      const result = applyInner(callee.inner, that, input);
       if (
         callee.kind === "function" ||
         callee.kind === "method" ||
@@ -442,7 +456,7 @@ export const createAdvice = ({
   const constructOuter = (callee, input) => {
     if (callee.type === "reference" && callee.kind === "function") {
       transit = true;
-      return wrap(registry, constructInner(callee, input));
+      return wrap(registry, constructInner(callee.inner, input));
     }
     return wrap(registry, constructInner(callee.inner, map(input, unwrap)));
   };
@@ -500,7 +514,9 @@ export const createAdvice = ({
                   );
                   copy[variable] = wrapInput(
                     registry,
-                    createArray(map(init, unwrap)),
+                    /** @type {Reference} */ (
+                      applyInner(createArray, null, map(init, unwrap))
+                    ),
                     init,
                   );
                 } else {
