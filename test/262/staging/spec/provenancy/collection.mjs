@@ -4,10 +4,6 @@ const {
   WeakMap: {
     prototype: { get: getWeakMap, set: setWeakMap },
   },
-  WeakSet,
-  WeakSet: {
-    prototype: { add: addWeakSet, has: hasWeakSet },
-  },
 } = globalThis;
 
 const descriptor = {
@@ -18,7 +14,7 @@ const descriptor = {
 };
 
 /**
- * @type {<K extends object, V>() => import("./collection.js").WeakMap<K, V>}
+ * @type {<K extends object, V>() => import("./collection.d.ts").WeakMap<K, V>}
  */
 export const createWeakMap = () => {
   const collection = new WeakMap();
@@ -26,17 +22,5 @@ export const createWeakMap = () => {
   defineProperty(collection, "get", descriptor);
   descriptor.value = setWeakMap;
   defineProperty(collection, "set", descriptor);
-  return /** @type {any} */ (collection);
-};
-
-/**
- * @type {<K extends object>() => import("./collection.js").WeakSet<K>}
- */
-export const createWeakSet = () => {
-  const collection = new WeakSet();
-  descriptor.value = addWeakSet;
-  defineProperty(collection, "add", descriptor);
-  descriptor.value = hasWeakSet;
-  defineProperty(collection, "has", descriptor);
   return /** @type {any} */ (collection);
 };

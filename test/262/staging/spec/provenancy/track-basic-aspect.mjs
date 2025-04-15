@@ -601,7 +601,7 @@ export const createAdvice = ({
     "apply@around": (_transit, callee, that, input, _tag) => {
       const result = apply(callee, that, input);
       if (result.type === "primitive" && result.kind === "standard") {
-        let prov = 0;
+        let prov = 1;
         prov += result.prov;
         prov += callee.prov;
         prov += that.prov;

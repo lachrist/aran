@@ -13,7 +13,7 @@ const { Error, eval: evalGlobal } = globalThis;
 
 /**
  * @typedef {{
- *   size: number,
+ *   prov: number,
  *   kind: import("aran").TestKind,
  *   tag: string,
  * }} Branch
@@ -114,8 +114,8 @@ const test = (code, { tracking, include }) => {
       SyntaxError: globalThis.SyntaxError,
       String: globalThis.String,
       tracking,
-      recordBranch: (kind, size, tag) => {
-        branches.push({ kind, size, tag });
+      recordBranch: (kind, prov, tag) => {
+        branches.push({ kind, prov, tag });
       },
       record_directory: null,
     }),
@@ -147,7 +147,7 @@ const testSuite = ({ tracking, include }) => {
   assertDeepEqual(test("(5 ? null : null);", { tracking, include }), [
     {
       kind: "conditional",
-      size: /* 5 */ 1,
+      prov: /* 5 */ 1,
       tag: "ConditionalExpression:$.body.0.expression",
     },
   ]);
@@ -155,7 +155,7 @@ const testSuite = ({ tracking, include }) => {
   assertDeepEqual(test("(({}) ? null : null);", { tracking, include }), [
     {
       kind: "conditional",
-      size: 0,
+      prov: 0,
       tag: "ConditionalExpression:$.body.0.expression",
     },
   ]);
@@ -163,13 +163,13 @@ const testSuite = ({ tracking, include }) => {
   assertDeepEqual(test("(2 + 3 ? null : null);", { tracking, include }), [
     {
       kind: "conditional",
-      size:
+      prov:
         /* apply offset (performBinary) */ 1 +
+        /** res = 5 */ 0 +
         /* this = undefined */ 1 +
         /* arg0 = "+" */ 1 +
         /* arg1 = 2 */ 1 +
-        /* arg2 = 3 */ 1 +
-        /** res = 5 */ 1,
+        /* arg2 = 3 */ 1,
       tag: "ConditionalExpression:$.body.0.expression",
     },
   ]);
@@ -177,20 +177,19 @@ const testSuite = ({ tracking, include }) => {
   assertDeepEqual(test("(1 + 2 + 3 ? null : null);", { tracking, include }), [
     {
       kind: "conditional",
-      size:
+      prov:
         /* apply offset (performBinary) */ 1 +
+        /* res = 6 */ 0 +
         /* this = undefined */ 1 +
         /* arg0 = "+" */ 1 +
         /* arg1 = 1 */ 1 +
-        /* arg2 = 5 */ 0 +
-        /* res = 6 */ 1 +
-        (0 +
+        /* arg2 = 5 */ (0 +
           /* apply offset (performBinary) */ 1 +
+          /* res = 5 */ 0 +
           /* this = undefined */ 1 +
           /* arg0 = "+" */ 1 +
           /* arg1 = 2 */ 1 +
           /* arg2 = 3 */ 1 +
-          /* res = 6 */ 1 +
           0),
       tag: "ConditionalExpression:$.body.0.expression",
     },
@@ -201,12 +200,12 @@ const testSuite = ({ tracking, include }) => {
     [
       {
         kind: "conditional",
-        size:
+        prov:
           /* apply offset (getValueProperty) */ 1 +
+          /* res = 123 */ 0 +
           /* this = undefined */ 1 +
           /* arg1 = {foo:123} */ 0 +
-          /* arg2 = "foo" */ 1 +
-          /* res = 123 */ 1,
+          /* arg2 = "foo" */ 1,
         tag: "ConditionalExpression:$.body.0.expression",
       },
     ],
@@ -215,16 +214,16 @@ const testSuite = ({ tracking, include }) => {
   assertDeepEqual(test("([123][0] ? null : null);", { tracking, include }), [
     {
       kind: "conditional",
-      size:
+      prov:
         /* apply offset (getValueProperty) */ 1 +
+        /* res = 123 */ 0 +
         /* this = undefined */ 1 +
         /* arg1 = [123] */ 0 +
-        /* arg2 = 0 */ 1 +
-        /* res = 123 */ 1,
+        /* arg2 = 0 */ 1,
       tag: "ConditionalExpression:$.body.0.expression",
     },
   ]);
-  // inter-tracking argument tracking //
+  // inter-procedural argument tracking //
   assertDeepEqual(
     test("{ const f = (x) => (x ? null : null); f(2 + 3); }", {
       tracking,
@@ -233,17 +232,40 @@ const testSuite = ({ tracking, include }) => {
     [
       {
         kind: "conditional",
-        size: 4,
+        prov:
+          /* apply performBinaryOperation */ 1 +
+          /* res = true */ 0 +
+          /* this = undefined */ 1 +
+          /* arg0 = ">=" */ 0 +
+          /* arg1 = (length) */ 0 +
+          /* arg2 = 1 */ 1 +
+          0,
         tag: "Identifier:$.body.0.body.0.declarations.0.init.params.0",
       },
       {
         kind: "conditional",
-        size: { stack: 1, intra: 4, inter: 9 }[tracking],
+        prov: {
+          stack: 0,
+          intra:
+            /* apply getValueProperty */ 1 +
+            /* res = 5 */ 0 +
+            /* this = undefined */ 1 +
+            /* arg0 = &input */ 0 +
+            /* arg1 = 0 */ 1 +
+            0,
+          inter:
+            /* apply getValueProperty */ 1 +
+            /* res = 5 */ 4 +
+            /* this = undefined */ 1 +
+            /* arg0 = &input */ 0 +
+            /* arg1 = 0 */ 1 +
+            0,
+        }[tracking],
         tag: "ConditionalExpression:$.body.0.body.0.declarations.0.init.body",
       },
     ],
   );
-  // inter-tracking result tracking //
+  // inter-procedural result tracking //
   assertDeepEqual(
     test("{ const f = () => 2 + 3; (f() ? null : null); }", {
       tracking,
@@ -252,12 +274,12 @@ const testSuite = ({ tracking, include }) => {
     [
       {
         kind: "conditional",
-        size: { stack: 3, intra: 3, inter: 8 }[tracking],
+        prov: { stack: 2, intra: 2, inter: 8 }[tracking],
         tag: "ConditionalExpression:$.body.0.body.1.expression",
       },
     ],
   );
-  // inter-tracking result tracking //
+  // inter-procedural result tracking //
   assertDeepEqual(
     test("{ const f = () => 2 + 3; (f() ? null : null); }", {
       tracking,
@@ -266,7 +288,7 @@ const testSuite = ({ tracking, include }) => {
     [
       {
         kind: "conditional",
-        size: { stack: 3, intra: 3, inter: 8 }[tracking],
+        prov: { stack: 2, intra: 2, inter: 8 }[tracking],
         tag: "ConditionalExpression:$.body.0.body.1.expression",
       },
     ],
@@ -277,29 +299,29 @@ const testSuite = ({ tracking, include }) => {
       ? [
           {
             kind: "conditional",
-            size: /* has declarative record */ 4,
+            prov: /* has declarative record */ 3,
             tag: "CallExpression:$.body.0.expression",
           },
           {
             kind: "conditional",
-            size: /* has global object */ 4,
+            prov: /* has global object */ 3,
             tag: "CallExpression:$.body.0.expression",
           },
         ]
       : []),
     {
       kind: "conditional",
-      size: /* eval === intrinsics.eval */ 4,
+      prov: /* eval === intrinsics.eval */ 3,
       tag: "CallExpression:$.body.0.expression",
     },
     {
       kind: "conditional",
-      size: /* typeof arg0 === "string" */ 10,
+      prov: /* typeof arg0 === "string" */ 8,
       tag: "CallExpression:$.body.0.expression",
     },
     {
       kind: "conditional",
-      size: /* 5 */ 1,
+      prov: /* 5 */ 1,
       tag: "ConditionalExpression:$.body.0.expression",
     },
   ]);
@@ -310,7 +332,7 @@ const testSuite = ({ tracking, include }) => {
       ? [
           {
             kind: "conditional",
-            size: /* 5 */ 1,
+            prov: /* 5 */ 1,
             tag: "ConditionalExpression:$.body.0.expression",
           },
         ]
@@ -329,39 +351,39 @@ const testSuite = ({ tracking, include }) => {
       ? [
           {
             kind: "conditional",
-            size: /* 5 */ 5,
+            prov: /* 5 */ 4,
             tag: "ConditionalExpression:$.body.0.expression",
           },
         ]
       : [
           {
             kind: "conditional",
-            size: 1,
+            prov: 1,
             tag: "FunctionExpression:$.body.0.expression",
           },
           {
             kind: "conditional",
-            size: 6,
+            prov: 6,
             tag: "FunctionExpression:$.body.0.expression",
           },
           {
             kind: "conditional",
-            size: 4,
+            prov: 4,
             tag: "Identifier:$.body.0.expression.params.0",
           },
           {
             kind: "conditional",
-            size: 4,
+            prov: 4,
             tag: "Identifier:$.body.0.expression.params.1",
           },
           {
             kind: "conditional",
-            size: 1,
+            prov: 1,
             tag: "FunctionExpression:$.body.0.expression",
           },
           {
             kind: "conditional",
-            size: { stack: 5, intra: 5, inter: 16 }[tracking],
+            prov: { stack: 5, intra: 5, inter: 16 }[tracking],
             tag: "ConditionalExpression:$.body.0.expression",
           },
         ],

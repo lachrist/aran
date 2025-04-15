@@ -22,9 +22,9 @@ const {
 } = globalThis;
 
 /**
- * @typedef {import("./location.js").NodeHash} NodeHash
- * @typedef {import("./location.js").FilePath} FilePath
- * @typedef {import("./location.js").Atom} Atom
+ * @typedef {import("./location.d.ts").NodeHash} NodeHash
+ * @typedef {import("./location.d.ts").FilePath} FilePath
+ * @typedef {import("./location.d.ts").Atom} Atom
  */
 
 const advice_global_variable = "__ARAN_ADVICE__";
@@ -95,7 +95,7 @@ const updateAdvice = (
  *     include: "main" | "comp",
  *     global: "internal" | "external",
  *   },
- * ) => Promise<import("../../stage.js").Stage<
+ * ) => Promise<import("../../stage.d.ts").Stage<
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
@@ -103,8 +103,8 @@ const updateAdvice = (
  *   {
  *     handle: import("node:fs/promises").FileHandle,
  *     record_directory: null | URL,
- *     index: import("../../../test-case.js").TestIndex,
- *     buffer: import("./branch.js").Branch[],
+ *     index: import("../../../test-case.d.ts").TestIndex,
+ *     buffer: import("./branch.d.ts").Branch[],
  *   },
  * >>}
  */
