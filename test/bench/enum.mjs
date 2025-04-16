@@ -62,11 +62,15 @@ export const isModuleBase = (name) => hasOwn(MODULE_BASE_RECORD, name);
  * }}
  */
 export const META_RECORD = {
-  none: null,
-  bare: null,
-  full: null,
-  track: null,
-  linvail: null,
+  "none": null,
+  "bare": null,
+  "full": null,
+  "track": null,
+  "linvail": null,
+  "linvail-standard": null,
+  "linvail-custom": null,
+  "symbolic-intensional": null,
+  "symbolic-extensional": null,
 };
 
 /**

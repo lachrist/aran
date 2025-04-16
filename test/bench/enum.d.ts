@@ -19,4 +19,13 @@ export type OctaneBase =
 
 export type Base = ModuleBase | OctaneBase;
 
-export type Meta = "none" | "bare" | "full" | "track" | "linvail";
+export type Meta =
+  | "none"
+  | "bare"
+  | "full"
+  | "track"
+  | "linvail"
+  | "linvail-standard"
+  | "linvail-custom"
+  | "symbolic-intensional"
+  | "symbolic-extensional";

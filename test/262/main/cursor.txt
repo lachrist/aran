@@ -1,2 +1,2 @@
-2498
-{"kind":"script","path":"built-ins/Array/prototype/every/15.4.4.16-7-c-ii-20.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":[]}
+6996
+{"kind":"script","path":"built-ins/Array/prototype/sort/stability-2048-elements.js","directive":"none","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":[]}

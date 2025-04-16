@@ -1,2 +1,1 @@
-import { log } from "node:console";
-log("sandbox");
+123 + 456;
