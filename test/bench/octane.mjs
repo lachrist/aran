@@ -2,6 +2,8 @@ import { readFile } from "node:fs/promises";
 
 const { URL } = globalThis;
 
+const HOME = new URL("../../octane/", import.meta.url);
+
 /**
  * @type {(
  *   octane: import("./enum.d.ts").OctaneBase,
@@ -27,13 +29,10 @@ const listOctaneFile = (octane) => {
  */
 export const bundleOctane = async (octane) => {
   let bundle = "";
-  bundle += await readFile(new URL("octane/base.js", import.meta.url), "utf8");
+  bundle += await readFile(new URL("base.js", HOME), "utf8");
   bundle += "\n\n\n";
   for (const file of listOctaneFile(octane)) {
-    bundle += await readFile(
-      new URL(`octane/${file}.js`, import.meta.url),
-      "utf8",
-    );
+    bundle += await readFile(new URL(`${file}.js`, HOME), "utf8");
     bundle += "\n\n\n";
   }
   bundle += `
