@@ -1,2 +1,2 @@
-55460
-{"kind":"script","path":"language/expressions/class/cpn-class-expr-fields-computed-property-name-from-generator-function-declaration.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":["computed-property-names","class-fields-public","class-static-fields-public"]}
+2498
+{"kind":"script","path":"built-ins/Array/prototype/every/15.4.4.16-7-c-ii-20.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":[]}

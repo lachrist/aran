@@ -364,7 +364,7 @@ export const weave = (root, tracking) =>
  *             (
  *               callee: Value,
  *               args: Wrapper[],
- *             ): Reference;
+ *             ): ReferenceWrapper;
  *           },
  *         },
  *       },
@@ -460,7 +460,7 @@ export const createAdvice = ({
   const constructOuter = (callee, input) => {
     if (callee.type === "reference" && callee.kind === "function") {
       transit = true;
-      return wrap(registry, constructInner(callee.inner, input));
+      return constructInner(callee.inner, input);
     }
     return wrap(registry, constructInner(callee.inner, map(input, unwrap)));
   };
