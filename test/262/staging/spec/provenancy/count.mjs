@@ -14,7 +14,6 @@ import {
 import { digest, toEvalPath } from "./location.mjs";
 
 const {
-  URL,
   Array: { from: toArray },
   Reflect: { defineProperty },
 } = globalThis;
@@ -563,6 +562,7 @@ const compileWeave = ({ instrument_dynamic_code }) => {
  * @type {(
  *   config: {
  *     include: "comp" | "main",
+ *     output: URL,
  *   },
  * ) => Promise<
  *   import("../../stage.d.ts").Stage<
@@ -576,7 +576,7 @@ const compileWeave = ({ instrument_dynamic_code }) => {
  *   >
  * >}
  */
-export const createStage = async ({ include }) => {
+export const createStage = async ({ include, output }) => {
   const listPrecursorFailure = await compileListPrecursorFailure([
     `linvail/stnd-${include}`,
   ]);
@@ -595,10 +595,7 @@ export const createStage = async ({ include }) => {
   return {
     open: async (config) => ({
       ...config,
-      handle: await open(
-        new URL(`stage-${include}-output.txt`, import.meta.url),
-        "w",
-      ),
+      handle: await open(output, "w"),
     }),
     close: async ({ handle }) => {
       await handle.close();
