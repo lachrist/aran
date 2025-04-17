@@ -20,12 +20,12 @@ const { JSON, Math } = globalThis;
  * @type {import("./enum.js").Meta[]}
  */
 const metas = [
-  // "none",
-  // "bare",
-  // "linvail/custom/external",
-  // "linvail/custom/internal",
-  // "linvail/standard/external",
-  // "linvail/standard/internal",
+  "none",
+  "bare",
+  "linvail/custom/external",
+  "linvail/custom/internal",
+  "linvail/standard/external",
+  "linvail/standard/internal",
   "symbolic/intensional/void",
   "symbolic/intensional/file",
 ];

@@ -1,4 +1,4 @@
-import { openSync, writeSync } from "node:fs";
+import { closeSync, openSync, writeSync } from "node:fs";
 
 const { Error, String } = globalThis;
 
@@ -61,10 +61,19 @@ const { process, JSON, Array } = globalThis;
 export const compileFileRecord = ({ output, buffer_length }) => {
   /** @type {string[]} */
   const lines = new Array(buffer_length);
+  let line_count = 0;
+  let byte_count = 0;
   let index = 0;
   const handle = openSync(output, "w");
   process.on("exit", () => {
-    writeSync(handle, lines.slice(0, index).join("\n") + "\n", null, "utf8");
+    writeSync(handle, lines.slice(0, index).join(""), null, "utf8");
+    closeSync(handle);
+    writeSync(
+      1,
+      JSON.stringify({ line_count, byte_count }) + "\n",
+      null,
+      "utf8",
+    );
   });
   return /** @type {(...args: any) => void} */ (
     (...data) => {
@@ -72,7 +81,10 @@ export const compileFileRecord = ({ output, buffer_length }) => {
         writeSync(handle, lines.join("\n") + "\n", null, "utf8");
         index = 0;
       }
-      lines[index++] = JSON.stringify(data);
+      const line = JSON.stringify(data) + "\n";
+      line_count++;
+      byte_count += line.length + 1;
+      lines[index++] = JSON.stringify(line);
     }
   );
 };

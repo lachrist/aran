@@ -33,5 +33,5 @@
     "./doc/design/state-write.d.ts",
     "./doc/design/state-write.mjs"
   ],
-  "exclude": ["./test/262/main/record/"]
+  "exclude": ["./test/262/main/record/", "./test/bench/out/"]
 }
