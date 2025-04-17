@@ -67,10 +67,12 @@ export const META_RECORD = {
   "full": null,
   "track": null,
   "linvail": null,
-  "linvail-standard": null,
-  "linvail-custom": null,
-  "symbolic-intensional": null,
-  "symbolic-extensional": null,
+  "linvail/standard/internal": null,
+  "linvail/standard/external": null,
+  "linvail/custom/internal": null,
+  "linvail/custom/external": null,
+  "symbolic/intensional": null,
+  "symbolic/extensional": null,
 };
 
 /**

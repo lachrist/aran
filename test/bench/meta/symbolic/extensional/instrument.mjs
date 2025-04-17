@@ -10,7 +10,7 @@ import {
 import { weave } from "linvail";
 
 /**
- * @type {import("../../instrument.d.ts").Instrument}
+ * @type {import("../../../instrument.d.ts").Instrument}
  */
 export default ({ kind, code }) =>
   generate(

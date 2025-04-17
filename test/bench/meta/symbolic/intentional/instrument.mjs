@@ -1,17 +1,17 @@
 import { parse } from "acorn";
 import { generate } from "astring";
-import { transpile, retropile } from "aran";
+import { transpile, retropile, weaveStandard } from "aran";
+import { standard_pointcut as pointcut } from "linvail";
 import {
   advice_global_variable,
   intrinsic_global_variable,
 } from "./bridge.mjs";
-import { weave } from "linvail";
 
-/** @type {import("../../instrument.d.ts").Instrument} */
+/** @type {import("../../../instrument.js").Instrument} */
 export default ({ kind, code }) =>
   generate(
     retropile(
-      weave(
+      weaveStandard(
         transpile({
           path: "$",
           kind,
@@ -21,7 +21,7 @@ export default ({ kind, code }) =>
             ecmaVersion: 2024,
           }),
         }),
-        { advice_global_variable },
+        { advice_global_variable, pointcut },
       ),
       { intrinsic_global_variable },
     ),

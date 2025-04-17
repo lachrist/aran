@@ -1,11 +1,11 @@
 import { compileIntrinsicRecord } from "aran/runtime";
 import { dir } from "node:console";
+import { createRuntime, toStandardAdvice } from "linvail";
 import {
   advice_global_variable,
   intrinsic_global_variable,
 } from "./bridge.mjs";
-import { createRuntime, toStandardAdvice } from "linvail";
-import { compileFileRecord, serialize } from "./record.mjs";
+import { compileFileRecord, serialize } from "../record.mjs";
 
 const {
   URL,
@@ -70,7 +70,7 @@ const compileProvenanceAdvice = (intrinsics) => {
  *     getFreshIndex: (
  *       wrapper: import("linvail").Wrapper,
  *     ) => number | null,
- *     record: import("./record.d.ts").Record,
+ *     record: import("../record.js").Record,
  *   },
  * ) => import("aran").StandardAdvice<{
  *   StackValue: import("linvail").Wrapper,

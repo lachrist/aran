@@ -1,6 +1,6 @@
 import { WeakMap } from "linvail/library";
 import { analysis_advice_global_variable } from "./bridge.mjs";
-import { compileFileRecord, serialize } from "./record.mjs";
+import { compileFileRecord, serialize } from "../record.mjs";
 
 const {
   Error,
@@ -10,7 +10,7 @@ const {
 } = globalThis;
 
 /**
- * @typedef {import("./record.d.ts").Value} Value
+ * @typedef {{__brand: "Value"}} Value
  */
 
 /**
@@ -54,7 +54,7 @@ const createRegistry = () => {
  *   options: {
  *     register: (value: Value) => number | null,
  *     fetch: (value: Value) => number,
- *     record: import("./record.d.ts").Record,
+ *     record: import("../record.d.ts").Record,
  *   },
  * ) => import("aran").StandardAdvice<{
  *   Kind: import("./pointcut.d.ts").Pointcut,

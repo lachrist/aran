@@ -14,7 +14,7 @@ const reference_serial = { reference: null };
 
 /**
  * @type {(
- *   value: import("linvail").Value,
+ *   value: unknown,
  * ) => import("./record.d.ts").Serial}
  */
 export const serialize = (value) => {
@@ -69,7 +69,6 @@ export const compileFileRecord = ({ output, buffer_length }) => {
   return /** @type {(...args: any) => void} */ (
     (...data) => {
       if (index === buffer_length) {
-        writeSync(1, "flush\n", null, "utf8");
         writeSync(handle, lines.join("\n") + "\n", null, "utf8");
         index = 0;
       }

@@ -25,7 +25,9 @@ export type Meta =
   | "full"
   | "track"
   | "linvail"
-  | "linvail-standard"
-  | "linvail-custom"
-  | "symbolic-intensional"
-  | "symbolic-extensional";
+  | "linvail/standard/internal"
+  | "linvail/standard/external"
+  | "linvail/custom/internal"
+  | "linvail/custom/external"
+  | "symbolic/intensional"
+  | "symbolic/extensional";
