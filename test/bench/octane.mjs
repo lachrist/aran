@@ -61,7 +61,7 @@ export const bundleOctane = async (octane) => {
         times.push(results[index2].time);
       }
     }
-    globalThis.__RESULT__ = times;
+    globalThis.__RESULT__ = JSON.stringify(times);
   }`;
   return bundle;
 };

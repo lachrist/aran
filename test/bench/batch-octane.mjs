@@ -42,7 +42,7 @@ const devide1000 = (x) => x / 1000;
  * ) => Promise<Result>}
  */
 const exec = async (meta, base) => {
-  log(`exec ${meta} ${base}...`);
+  log(`\nEXEC ${meta} ${base}...`);
   await spawn("node", [
     "--max-old-space-size=8192",
     "test/bench/comp.mjs",
@@ -59,7 +59,6 @@ const exec = async (meta, base) => {
   ]);
   const size = Math.round((await stat(base_path)).size / 1024);
   const time = await readFile(dump_path, "utf8");
-  log(`exec ${meta} ${base}... done (${size} KB, ${time} us)`);
   return { meta, base, time: JSON.parse(time).map(devide1000), size };
 };
 
@@ -73,7 +72,9 @@ const main = async (_argv) => {
   const results = [];
   for (const base of OCTANE_BASE_ENUM) {
     for (const meta of metas) {
-      results.push(await exec(meta, base));
+      const result = await exec(meta, base);
+      log(result);
+      results.push(result);
     }
   }
   log(JSON.stringify(results, null, 2));
