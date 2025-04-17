@@ -18,7 +18,7 @@ const { URL } = globalThis;
     retropile(
       weave(
         transpile({
-          path: path1,
+          path: "$$",
           kind: "module",
           root: parse(content1, {
             locations: false,

@@ -1,5 +1,4 @@
 import { openSync, writeSync } from "node:fs";
-import { Buffer } from "node:buffer";
 
 const { Error, String } = globalThis;
 
@@ -65,15 +64,13 @@ export const compileFileRecord = ({ output, buffer_length }) => {
   let index = 0;
   const handle = openSync(output, "w");
   process.on("exit", () => {
-    writeSync(
-      handle,
-      Buffer.from(lines.slice(0, index).join("\n") + "\n", "utf8"),
-    );
+    writeSync(handle, lines.slice(0, index).join("\n") + "\n", null, "utf8");
   });
   return /** @type {(...args: any) => void} */ (
     (...data) => {
       if (index === buffer_length) {
-        writeSync(handle, Buffer.from(lines.join("\n") + "\n", "utf8"));
+        writeSync(1, "flush\n", null, "utf8");
+        writeSync(handle, lines.join("\n") + "\n", null, "utf8");
         index = 0;
       }
       lines[index++] = JSON.stringify(data);

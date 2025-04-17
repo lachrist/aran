@@ -8,12 +8,12 @@ import {
 import { standard_pointcut as pointcut } from "linvail";
 
 /** @type {import("../../instrument.d.ts").Instrument} */
-export default ({ path, kind, code }) =>
+export default ({ kind, code }) =>
   generate(
     retropile(
       weaveStandard(
         transpile({
-          path,
+          path: "$",
           kind,
           root: parse(code, {
             locations: false,

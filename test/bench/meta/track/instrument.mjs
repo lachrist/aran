@@ -22,13 +22,13 @@ const digest = (node, node_path, _file_path, _node_kind) =>
   `${node_path}#${locate(node)}`;
 
 /** @type {import("../../instrument.d.ts").Instrument} */
-export default ({ path, kind, code }) =>
+export default ({ kind, code }) =>
   generate(
     retropile(
       weave(
         transpile(
           {
-            path,
+            path: "$",
             kind,
             root: parse(code, {
               locations: true,

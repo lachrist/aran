@@ -8,12 +8,12 @@ import {
 import { weave } from "linvail";
 
 /** @type {import("../../instrument.d.ts").Instrument} */
-export default ({ path, kind, code }) =>
+export default ({ kind, code }) =>
   generate(
     retropile(
       weave(
         transpile({
-          path,
+          path: "$",
           kind,
           root: parse(code, {
             locations: false,

@@ -79,7 +79,7 @@ export const compileModule = async (meta, base) => {
  */
 export const compileOctane = async (meta, base) => {
   /** @type {import("./instrument.d.ts").Instrument} */
-  const instrument = (await import(`./meta/${meta}/transform.mjs`)).default;
+  const instrument = (await import(`./meta/${meta}/instrument.mjs`)).default;
   const base_path = await compileBaseOctane(meta, base, instrument);
   await writeFile(
     new URL(`out/main-${meta}-${base}.mjs`, import.meta.url),
