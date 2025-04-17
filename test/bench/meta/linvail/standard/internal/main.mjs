@@ -1,2 +1,5 @@
 import { setup } from "../../setup.mjs";
-setup("internal");
+setup({
+  global_scope: "internal",
+  advice_format: "standard",
+});

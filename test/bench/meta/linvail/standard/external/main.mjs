@@ -1,2 +1,5 @@
 import { setup } from "../../setup.mjs";
-setup("external");
+setup({
+  global_scope: "external",
+  advice_format: "standard",
+});

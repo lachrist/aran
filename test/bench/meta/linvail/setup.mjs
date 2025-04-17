@@ -4,7 +4,7 @@ import {
   advice_global_variable,
   intrinsic_global_variable,
 } from "./bridge.mjs";
-import { createRuntime } from "linvail";
+import { createRuntime, toStandardAdvice } from "linvail";
 
 const {
   Reflect: { defineProperty },
@@ -12,10 +12,13 @@ const {
 
 /**
  * @type {(
- *   global_scope: "internal" | "external",
+ *   config: {
+ *     global_scope: "internal" | "external",
+ *     advice_format: "standard" | "custom",
+ *   },
  * ) => void}
  */
-export const setup = (global_scope) => {
+export const setup = ({ global_scope, advice_format }) => {
   const intrinsics = compileIntrinsicRecord(globalThis);
   const { advice } = createRuntime(intrinsics, {
     dir: (value) =>
@@ -52,7 +55,7 @@ export const setup = (global_scope) => {
   defineProperty(globalThis, advice_global_variable, {
     // @ts-ignore
     __proto__: null,
-    value: advice,
+    value: advice_format === "standard" ? toStandardAdvice(advice) : advice,
     writable: false,
     enumerable: false,
     configurable: false,

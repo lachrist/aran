@@ -7,7 +7,7 @@ import {
   intrinsic_global_variable,
 } from "./bridge.mjs";
 
-/** @type {import("../../../instrument.js").Instrument} */
+/** @type {import("../../../instrument.d.ts").Instrument} */
 export default ({ kind, code }) =>
   generate(
     retropile(
