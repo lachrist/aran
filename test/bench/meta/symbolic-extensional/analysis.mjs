@@ -10,7 +10,7 @@ const {
 } = globalThis;
 
 /**
- * @typedef {import("./record.js").Value} Value
+ * @typedef {import("./record.d.ts").Value} Value
  */
 
 /**
@@ -54,10 +54,10 @@ const createRegistry = () => {
  *   options: {
  *     register: (value: Value) => number | null,
  *     fetch: (value: Value) => number,
- *     record: import("./record.js").Record,
+ *     record: import("./record.d.ts").Record,
  *   },
  * ) => import("aran").StandardAdvice<{
- *   Kind: import("./pointcut.js").Pointcut,
+ *   Kind: import("./pointcut.d.ts").Pointcut,
  *   StackValue: Value,
  *   ScopeValue: Value,
  *   OtherValue: Value,

@@ -9,9 +9,9 @@ import { weaveStandard } from "aran";
 import { advice_global_variable } from "./globals.mjs";
 
 /**
- * @typedef {import("./location.js").NodeHash} NodeHash
- * @typedef {import("./location.js").FilePath} FilePath
- * @typedef {import("./location.js").Atom} Atom
+ * @typedef {import("./location.d.ts").NodeHash} NodeHash
+ * @typedef {import("./location.d.ts").FilePath} FilePath
+ * @typedef {import("./location.d.ts").Atom} Atom
  * @typedef {import("linvail").Primitive} Primitive
  * @typedef {import("linvail").Value} Value
  * @typedef {import("linvail").Wrapper} Wrapper

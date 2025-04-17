@@ -1,1 +1,2 @@
-// 123 + 456;
+import { log } from "node:console";
+log(2 + 3);

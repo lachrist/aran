@@ -70,7 +70,7 @@ const compileProvenanceAdvice = (intrinsics) => {
  *     getFreshIndex: (
  *       wrapper: import("linvail").Wrapper,
  *     ) => number | null,
- *     record: import("./record.js").Record,
+ *     record: import("./record.d.ts").Record,
  *   },
  * ) => import("aran").StandardAdvice<{
  *   StackValue: import("linvail").Wrapper,
