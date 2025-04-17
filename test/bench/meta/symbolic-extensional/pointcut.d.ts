@@ -7,5 +7,4 @@ export type Pointcut =
   | "closure@after"
   | "block@declaration"
   | "apply@around"
-  | "construct@around"
-  | "program-block@after";
+  | "construct@around";

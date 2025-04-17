@@ -21,27 +21,24 @@ const locate = (node) => {
 const digest = (node, node_path, _file_path, _node_kind) =>
   `${node_path}#${locate(node)}`;
 
-/** @type {import("../../transform.d.ts").Transform} */
-export default {
-  transformBase: ({ path, kind, code }) =>
-    generate(
-      retropile(
-        weave(
-          transpile(
-            {
-              path,
-              kind,
-              root: parse(code, {
-                locations: true,
-                sourceType: kind,
-                ecmaVersion: 2024,
-              }),
-            },
-            { digest },
-          ),
+/** @type {import("../../instrument.d.ts").Instrument} */
+export default ({ path, kind, code }) =>
+  generate(
+    retropile(
+      weave(
+        transpile(
+          {
+            path,
+            kind,
+            root: parse(code, {
+              locations: true,
+              sourceType: kind,
+              ecmaVersion: 2024,
+            }),
+          },
+          { digest },
         ),
-        { intrinsic_global_variable },
       ),
+      { intrinsic_global_variable },
     ),
-  transformMeta: ({ code }) => code,
-};
+  );

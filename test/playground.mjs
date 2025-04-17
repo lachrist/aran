@@ -1,5 +1,5 @@
-// // @ts-nocheck
-// /* eslint-disable */
+// @ts-nocheck
+/* eslint-disable */
 
 import { setupile, transpile, retropile } from "aran";
 import { parse } from "acorn";

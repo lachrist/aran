@@ -21,7 +21,6 @@ const analysis_pointcut_record = {
   "block@declaration": null,
   "apply@around": null,
   "construct@around": null,
-  "program-block@after": null,
 };
 
 /**

@@ -1,9 +1,22 @@
-import { advice_global_variable } from "./bridge.mjs";
+import {
+  advice_global_variable,
+  intrinsic_global_variable,
+} from "./bridge.mjs";
+import { compileIntrinsicRecord } from "aran/runtime";
 
 const {
   SyntaxError,
   Reflect: { apply, construct, defineProperty },
 } = globalThis;
+
+defineProperty(globalThis, intrinsic_global_variable, {
+  // @ts-ignore
+  __proto__: null,
+  value: compileIntrinsicRecord(globalThis),
+  writable: false,
+  enumerable: false,
+  configurable: false,
+});
 
 /**
  * @type {import("aran").StandardAdvice<{

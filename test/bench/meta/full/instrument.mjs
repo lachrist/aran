@@ -23,25 +23,22 @@ const locate = (node) => {
 const _digest = (node, node_path, _file_path, _node_kind) =>
   `${node_path}#${locate(node)}`;
 
-/** @type {import("../../transform.d.ts").Transform} */
-export default {
-  transformMeta: ({ code }) => code,
-  transformBase: ({ path, kind, code }) =>
-    generate(
-      retropile(
-        weaveStandard(
-          transpile({
-            path,
-            kind,
-            root: parse(code, {
-              locations: false,
-              sourceType: kind,
-              ecmaVersion: 2024,
-            }),
+/** @type {import("../../instrument.js").Instrument} */
+export default ({ path, kind, code }) =>
+  generate(
+    retropile(
+      weaveStandard(
+        transpile({
+          path,
+          kind,
+          root: parse(code, {
+            locations: false,
+            sourceType: kind,
+            ecmaVersion: 2024,
           }),
-          { advice_global_variable, pointcut: true },
-        ),
-        { intrinsic_global_variable },
+        }),
+        { advice_global_variable, pointcut: true },
       ),
+      { intrinsic_global_variable },
     ),
-};
+  );
