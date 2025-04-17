@@ -1,17 +1,16 @@
 import { build, formatMessages } from "esbuild";
-import { fileURLToPath } from "node:url";
 import { warn } from "node:console";
 
 const { Error } = globalThis;
 
 /**
  * @type {(
- *   entry: URL,
+ *   base: import("./enum.js").ModuleBase,
  * ) => Promise<string>}
  */
-export const bundleModule = async (entry) => {
+export const bundleModule = async (base) => {
   const result = await build({
-    entryPoints: [fileURLToPath(entry)],
+    entryPoints: [`test/bench/base/${base}.mjs`],
     bundle: true,
     write: false,
     format: "esm",
@@ -33,5 +32,9 @@ export const bundleModule = async (entry) => {
     });
     warn(messages.join("\n"));
   }
-  return result.outputFiles[0].text;
+  return [
+    "// @ts-nocheck",
+    "/* eslint-disable */",
+    result.outputFiles[0].text,
+  ].join("\n");
 };

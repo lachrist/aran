@@ -162,17 +162,27 @@ const compileAnalysisAdvice = ({ register, fetch, record }) => ({
   },
 });
 
-defineProperty(globalThis, analysis_advice_global_variable, {
-  // @ts-ignore
-  __proto__: null,
-  value: compileAnalysisAdvice({
-    ...createRegistry(),
-    record: compileFileRecord({
-      output: new URL("./trace.jsonl", import.meta.url),
-      buffer_length: 1024,
+/**
+ * @type {(
+ *   record: "void" | "file",
+ * ) => void}
+ */
+export const setupAnalysis = (record) => {
+  defineProperty(globalThis, analysis_advice_global_variable, {
+    // @ts-ignore
+    __proto__: null,
+    value: compileAnalysisAdvice({
+      ...createRegistry(),
+      record:
+        record === "file"
+          ? compileFileRecord({
+              output: new URL("./trace.jsonl", import.meta.url),
+              buffer_length: 1024,
+            })
+          : () => {},
     }),
-  }),
-  enumerable: false,
-  writable: false,
-  configurable: false,
-});
+    enumerable: false,
+    writable: false,
+    configurable: false,
+  });
+};

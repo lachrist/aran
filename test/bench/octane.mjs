@@ -29,6 +29,8 @@ const listOctaneFile = (octane) => {
  */
 export const bundleOctane = async (octane) => {
   let bundle = "";
+  bundle += "// @ts-nocheck\n";
+  bundle += "/* eslint-disable */\n";
   bundle += await readFile(new URL("base.js", HOME), "utf8");
   bundle += "\n\n\n";
   for (const file of listOctaneFile(octane)) {
@@ -36,6 +38,7 @@ export const bundleOctane = async (octane) => {
     bundle += "\n\n\n";
   }
   bundle += `
+  {
     BenchmarkSuite.RunSuites({
       NotifyStart: (name) => {
         console.log("Start", name);
@@ -46,18 +49,19 @@ export const bundleOctane = async (octane) => {
       NotifyResult: (name, score) => {
         console.log("Score", name, score);
       },
-      NotifyScore: (...args) => {
-        // console.log("NotifyScore", args);
-      },
       NotifyStep: (name) => {
         console.log("Step", name);
       },
     });
-    for (const { results } of BenchmarkSuite.suites) {
-      for (const { benchmark: { name }, time, latency } of results) {
-        console.log("Final", name, time / 1000, latency);
+    const times = [];
+    const { suites } = BenchmarkSuite;
+    for (let index1 = 0; index1 < suites.length; index1 += 1) {
+      const { results } = suites[index1];
+      for (let index2 = 0; index2 < results.length; index2 += 1) {
+        times.push(results[index2].time);
       }
     }
-  `;
+    globalThis.__RESULT__ = times;
+  }`;
   return bundle;
 };

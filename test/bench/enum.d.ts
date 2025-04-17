@@ -29,5 +29,7 @@ export type Meta =
   | "linvail/standard/external"
   | "linvail/custom/internal"
   | "linvail/custom/external"
-  | "symbolic/intensional"
-  | "symbolic/extensional";
+  | "symbolic/intensional/void"
+  | "symbolic/intensional/file"
+  | "symbolic/extensional/void"
+  | "symbolic/extensional/file";

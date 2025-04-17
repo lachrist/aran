@@ -206,28 +206,37 @@ const compileAnalysisAdvice = ({ advice, getIndex, getFreshIndex, record }) => {
   };
 };
 
-const intrinsics = compileIntrinsicRecord(globalThis);
+/**
+ * @type {(
+ *   record: "void" | "file",
+ * ) => void}
+ */
+export const setup = (record) => {
+  const intrinsics = compileIntrinsicRecord(globalThis);
+  defineProperty(globalThis, intrinsic_global_variable, {
+    // @ts-ignore
+    __proto__: null,
+    value: intrinsics,
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
 
-defineProperty(globalThis, intrinsic_global_variable, {
-  // @ts-ignore
-  __proto__: null,
-  value: intrinsics,
-  writable: false,
-  enumerable: false,
-  configurable: false,
-});
-
-defineProperty(globalThis, advice_global_variable, {
-  // @ts-ignore
-  __proto__: null,
-  value: compileAnalysisAdvice({
-    ...compileProvenanceAdvice(intrinsics),
-    record: compileFileRecord({
-      output: new URL("./trace.jsonl", import.meta.url),
-      buffer_length: 1024,
+  defineProperty(globalThis, advice_global_variable, {
+    // @ts-ignore
+    __proto__: null,
+    value: compileAnalysisAdvice({
+      ...compileProvenanceAdvice(intrinsics),
+      record:
+        record === "file"
+          ? compileFileRecord({
+              output: new URL("./trace.jsonl", import.meta.url),
+              buffer_length: 1024,
+            })
+          : () => {},
     }),
-  }),
-  writable: false,
-  enumerable: false,
-  configurable: false,
-});
+    writable: false,
+    enumerable: false,
+    configurable: false,
+  });
+};
