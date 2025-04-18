@@ -6,7 +6,7 @@ const { Error, Promise } = globalThis;
  * @type {(
  *   exec: string,
  *   argv: string[],
- * ) => Promise<void>}
+ * ) => Promise<number>}
  */
 export const spawn = (exec, argv) =>
   new Promise((resolve, reject) => {
@@ -15,12 +15,12 @@ export const spawn = (exec, argv) =>
     });
     child.on("error", reject);
     child.on("exit", (status, signal) => {
-      if (signal !== null) {
+      if (signal != null) {
         reject(new Error(`${exec} >> ${signal}`));
-      } else if (status !== 0) {
-        reject(new Error(`${exec} >> ${status}`));
+      } else if (status == null) {
+        reject(new Error(`${exec} >> null`));
       } else {
-        resolve();
+        resolve(status);
       }
     });
   });

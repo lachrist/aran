@@ -5,14 +5,20 @@ import { toBasePath, toDumpPath, toMainPath } from "./layout.mjs";
 import { spawn } from "./spawn.mjs";
 import { argv } from "node:process";
 
-const { JSON, Math } = globalThis;
+const {
+  Error,
+  Array: { isArray },
+  JSON,
+  Math,
+} = globalThis;
 
 /**
  * @typedef {{
  *   meta: import("./enum.js").Meta,
  *   base: import("./enum.js").OctaneBase,
- *   time: number[],
- *   size: number,
+ *   time: number[] | null,
+ *   size: number | null,
+ *   exit: number,
  * }} Result
  */
 
@@ -39,27 +45,66 @@ const devide1000 = (x) => x / 1000;
  * @type {(
  *   meta: import("./enum.js").Meta,
  *   base: import("./enum.js").OctaneBase,
+ * ) => Promise<number[]>}
+ */
+const readTime = async (meta, base) => {
+  const path = toDumpPath(meta, base);
+  const content = await readFile(path, "utf8");
+  /** @type {unknown} */
+  const time = JSON.parse(content);
+  if (!isArray(time)) {
+    throw new Error("not array");
+  }
+  for (const item of time) {
+    if (typeof item !== "number") {
+      throw new Error("not number");
+    }
+  }
+  return time.map(devide1000);
+};
+
+/**
+ * @type {(
+ *   meta: import("./enum.js").Meta,
+ *   base: import("./enum.js").OctaneBase,
+ * ) => Promise<number[] | null>}
+ */
+const readTimeMaybe = async (meta, base) => {
+  try {
+    return await readTime(meta, base);
+  } catch (error) {
+    log(error);
+    return null;
+  }
+};
+
+/**
+ * @type {(
+ *   meta: import("./enum.js").Meta,
+ *   base: import("./enum.js").OctaneBase,
  * ) => Promise<Result>}
  */
 const exec = async (meta, base) => {
   log(`\nEXEC ${meta} ${base}...`);
-  await spawn("node", [
-    "--max-old-space-size=8192",
-    "test/bench/comp.mjs",
-    meta,
-    base,
-  ]);
-  const base_path = toBasePath(meta, base, 2);
-  const dump_path = toDumpPath(meta, base);
-  const main_path = toMainPath(meta, base);
-  await spawn("node", [
+  {
+    const exit = await spawn("node", [
+      "--max-old-space-size=8192",
+      "test/bench/comp.mjs",
+      meta,
+      base,
+    ]);
+    if (exit !== 0) {
+      return { exit, meta, base, time: null, size: null };
+    }
+  }
+  const exit = await spawn("node", [
     "--max-old-space-size=8192",
     "--max-semi-space-size=256",
-    main_path,
+    toMainPath(meta, base),
   ]);
-  const size = Math.round((await stat(base_path)).size / 1024);
-  const time = await readFile(dump_path, "utf8");
-  return { meta, base, time: JSON.parse(time).map(devide1000), size };
+  const size = Math.round((await stat(toBasePath(meta, base, 2))).size / 1024);
+  const time = await readTimeMaybe(meta, base);
+  return { exit, meta, base, time, size };
 };
 
 /**

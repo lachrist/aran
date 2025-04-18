@@ -49,6 +49,8 @@ export const serialize = (value) => {
   }
 };
 
+const max_byte = 256 * 1024 ** 3; // 256GB
+
 const { process, JSON, Array } = globalThis;
 /**
  * @type {(
@@ -78,6 +80,15 @@ export const compileFileRecord = ({ output, buffer_length }) => {
   return /** @type {(...args: any) => void} */ (
     (...data) => {
       if (index === buffer_length) {
+        if (byte_count > max_byte) {
+          writeSync(
+            1,
+            `#lines = ${line_count}, #bytes = ${byte_count}`,
+            null,
+            "utf8",
+          );
+          throw new Error("TRACE OVERFLOW");
+        }
         writeSync(handle, lines.join("\n") + "\n", null, "utf8");
         index = 0;
       }
