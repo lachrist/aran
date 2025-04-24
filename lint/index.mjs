@@ -106,7 +106,7 @@ export default [
       "test/**/*.mjs",
       "lint/**/*.mjs",
     ],
-    ignores: ["test/262/codebase/**/*"],
+    ignores: ["test/262/codebase/**/*", "test/bench/out/*.mjs"],
     rules: { ...config.rules },
   },
   {

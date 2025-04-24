@@ -1,0 +1,20 @@
+This is LuaHBTeX, Version 1.18.0 (TeX Live 2024)  (format=lualatex 2024.9.3)  22 APR 2025 10:16
+ restricted system commands enabled.
+**
+
+! Emergency stop.
+<*> 
+ 
+End of file on the terminal!
+
+
+
+Here is how much of LuaTeX's memory you used:
+ 4 strings out of 475910
+ 100000,1977958 words of node,token memory allocated 270 words of node memory still in use:
+   1 hlist, 39 glue_spec nodes
+   avail lists: 2:12,3:3,4:1,5:1
+ 22758 multiletter control sequences out of 65536+600000
+ 14 fonts using 591679 bytes
+ 0i,0n,0p,0b,6s stack positions out of 10000i,1000n,20000p,200000b,200000s
+!  ==> Fatal error occurred, no output PDF file produced!

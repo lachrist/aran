@@ -18,7 +18,8 @@ const {
  *   base: import("./enum.js").OctaneBase,
  *   time: number[] | null,
  *   size: number | null,
- *   exit: number,
+ *   status: number | null,
+ *   signal: string | null,
  * }} Result
  */
 
@@ -87,24 +88,24 @@ const readTimeMaybe = async (meta, base) => {
 const exec = async (meta, base) => {
   log(`\nEXEC ${meta} ${base}...`);
   {
-    const exit = await spawn("node", [
+    const { status, signal } = await spawn("node", [
       "--max-old-space-size=8192",
       "test/bench/comp.mjs",
       meta,
       base,
     ]);
-    if (exit !== 0) {
-      return { exit, meta, base, time: null, size: null };
+    if (status !== 0 || signal !== null) {
+      return { status, signal, meta, base, time: null, size: null };
     }
   }
-  const exit = await spawn("node", [
+  const { status, signal } = await spawn("node", [
     "--max-old-space-size=8192",
     "--max-semi-space-size=256",
     toMainPath(meta, base),
   ]);
   const size = Math.round((await stat(toBasePath(meta, base, 2))).size / 1024);
   const time = await readTimeMaybe(meta, base);
-  return { exit, meta, base, time, size };
+  return { status, signal, meta, base, time, size };
 };
 
 /**

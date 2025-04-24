@@ -153,7 +153,7 @@ export const parseBranching = (content) => {
     (_, index) => ({
       path: data[index * 3],
       type: node_type_enum[data[index * 3 + 1]],
-      size: data[index * 3 + 2],
+      prov: data[index * 3 + 2],
     }),
   );
 };

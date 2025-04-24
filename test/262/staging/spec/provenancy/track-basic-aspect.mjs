@@ -436,11 +436,7 @@ export const createAdvice = ({
       //   - It cannot be a Proxy as it directly comes from a literal closure.
       transit = true;
       const result = applyInner(callee.inner, that, input);
-      if (
-        callee.kind === "function" ||
-        callee.kind === "method" ||
-        callee.kind === "arrow"
-      ) {
+      if (isInternalClosureKind(callee.kind)) {
         return /** @type {Wrapper} */ (result);
       } else {
         return wrap(registry, /** @type {Value} */ (result));

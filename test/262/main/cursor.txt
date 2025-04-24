@@ -1,2 +1,2 @@
-6996
-{"kind":"script","path":"built-ins/Array/prototype/sort/stability-2048-elements.js","directive":"none","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":[]}
+10146
+{"kind":"script","path":"built-ins/DataView/prototype/setUint32/this-has-no-dataview-internal.js","directive":"use-strict","negative":null,"asynchronous":false,"includes":["assert.js","sta.js"],"features":["Int8Array"]}

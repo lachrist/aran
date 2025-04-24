@@ -1,12 +1,15 @@
 import { spawn as spawnNode } from "node:child_process";
 
-const { Error, Promise } = globalThis;
+const { Promise } = globalThis;
 
 /**
  * @type {(
  *   exec: string,
  *   argv: string[],
- * ) => Promise<number>}
+ * ) => Promise<{
+ *   status: null | number;
+ *   signal: null | string;
+ * }>}
  */
 export const spawn = (exec, argv) =>
   new Promise((resolve, reject) => {
@@ -15,12 +18,6 @@ export const spawn = (exec, argv) =>
     });
     child.on("error", reject);
     child.on("exit", (status, signal) => {
-      if (signal != null) {
-        reject(new Error(`${exec} >> ${signal}`));
-      } else if (status == null) {
-        reject(new Error(`${exec} >> null`));
-      } else {
-        resolve(status);
-      }
+      resolve({ status, signal });
     });
   });

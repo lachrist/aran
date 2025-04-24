@@ -38,30 +38,30 @@ export const bundleOctane = async (octane) => {
     bundle += "\n\n\n";
   }
   bundle += `
-  {
-    BenchmarkSuite.RunSuites({
-      NotifyStart: (name) => {
-        console.log("Start", name);
-      },
-      NotifyError: (name, error) => {
-        console.log("Error", name, error);
-      },
-      NotifyResult: (name, score) => {
-        console.log("Score", name, score);
-      },
-      NotifyStep: (name) => {
-        console.log("Step", name);
-      },
-    });
-    const times = [];
-    const { suites } = BenchmarkSuite;
-    for (let index1 = 0; index1 < suites.length; index1 += 1) {
-      const { results } = suites[index1];
-      for (let index2 = 0; index2 < results.length; index2 += 1) {
-        times.push(results[index2].time);
-      }
-    }
-    JSON.stringify(times);
-  }`;
+ {
+   BenchmarkSuite.RunSuites({
+     NotifyStart: (name) => {
+       console.log("Start", name);
+     },
+     NotifyError: (name, error) => {
+       console.log("Error", name, error);
+     },
+     NotifyResult: (name, score) => {
+       console.log("Score", name, score);
+     },
+     NotifyStep: (name) => {
+       console.log("Step", name);
+     },
+   });
+   const times = [];
+   const { suites } = BenchmarkSuite;
+   for (let index1 = 0; index1 < suites.length; index1 += 1) {
+     const { results } = suites[index1];
+     for (let index2 = 0; index2 < results.length; index2 += 1) {
+       times.push(results[index2].time);
+     }
+   }
+   JSON.stringify(times);
+ }`;
   return bundle;
 };

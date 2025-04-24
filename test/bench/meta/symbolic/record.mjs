@@ -92,10 +92,10 @@ export const compileFileRecord = ({ output, buffer_length }) => {
         writeSync(handle, lines.join("\n") + "\n", null, "utf8");
         index = 0;
       }
-      const line = JSON.stringify(data) + "\n";
+      const line = JSON.stringify(data);
       line_count++;
       byte_count += line.length + 1;
-      lines[index++] = JSON.stringify(line);
+      lines[index++] = line;
     }
   );
 };

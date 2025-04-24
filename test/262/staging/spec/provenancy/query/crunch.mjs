@@ -5,9 +5,21 @@ import { parseBranching } from "../branching.mjs";
 
 const { Math, URL, Array, Infinity, Symbol, isNaN } = globalThis;
 
+/**
+ * @typedef {"stack" | "intra" | "inter" | "store"} Tracking
+ * @typedef {"main" | "comp"} Include
+ */
+
 //////////
 // Util //
 //////////
+
+/**
+ * @type {(
+ *   array: unknown[],
+ * ) => boolean}
+ */
+const isNotEmpty = (array) => array.length > 0;
 
 /**
  * @type {(
@@ -123,7 +135,8 @@ const computeEachPercentIncrease = (nums1, nums2) => {
  *   | "inter-main"
  *   | "inter-comp"
  *   | "store-main"
- *   | "store-comp"
+ *   | "store-comp-internal"
+ *   | "store-comp-external"
  * )} SuiteName
  */
 
@@ -168,7 +181,10 @@ const deviation2 = [20501, 20502, 20503, 20504, 20505, 20506, 20507, 20508];
 // built-ins/Date/S15.9.2.1_A2.js >> @use-strict
 const deviation3 = [10230];
 
-const deviation = [...deviation1, ...deviation2, ...deviation3];
+// unknown
+const deviation4 = [50277, 50419, 50420];
+
+const deviation = [...deviation1, ...deviation2, ...deviation3, ...deviation4];
 
 /**
  * @type {(
@@ -216,13 +232,22 @@ const loadSuiteRecord = async (names) => {
             const hashes = [];
             /** @type {number[]} */
             const provs = [];
-            for (const { path, type: _type, prov } of parseBranching(
-              lines[suite_index],
-            )) {
+            const line = lines[suite_index];
+            for (const { path, type, prov } of parseBranching(line)) {
               hashes.push(path);
-              // if (type === "IfStatement") {
-              provs.push(prov);
-              // }
+              if (
+                type === "IfStatement" ||
+                type === "SwitchStatement" ||
+                type === "WhileStatement" ||
+                type === "DoWhileStatement" ||
+                type === "ForInStatement" ||
+                type === "ForOfStatement" ||
+                type === "ForStatement" ||
+                type === "ConditionalExpression" ||
+                type === "LogicalExpression"
+              ) {
+                provs.push(prov);
+              }
             }
             sizing.push(/** @type {Prov[]} */ (provs));
             hashing.push(/** @type {Hash[]} */ (hashes));
@@ -279,26 +304,32 @@ const loadSuiteRecord = async (names) => {
 //////////
 
 /**
- * @type {["stack", "intra", "inter", "store"]}
+ * @type {Tracking[]}
  */
 const trackings = ["stack", "intra", "inter", "store"];
 
 /**
  * @type {(
- *   tracking: "stack" | "intra" | "inter" | "store",
- *   include: "main" | "comp",
- * ) => SuiteName}
+ *   tracking: Tracking,
+ *   include: Include
+ * ) => SuiteName[]}
  */
-const toSuiteName = (tracking, include) => `${tracking}-${include}`;
+const listSuiteName = (tracking, include) => {
+  /** @type {`${Tracking}-${Include}`} */
+  const name = `${tracking}-${include}`;
+  return name === "store-comp"
+    ? [`${name}-internal`, `${name}-external`]
+    : [name];
+};
 
 /**
  * @type {(
- *   include: "main" | "comp",
+ *   include: Include,
  * ) => Promise<void>}
  */
 const main = async (include) => {
   const suites = await loadSuiteRecord(
-    trackings.map((tracking) => toSuiteName(tracking, include)),
+    trackings.flatMap((tracking) => listSuiteName(tracking, include)),
   );
   for (const [name, suite] of suites) {
     await writeFile(
@@ -308,7 +339,7 @@ const main = async (include) => {
     );
     await writeFile(
       new URL(`../output/${name}-aggr.txt`, import.meta.url),
-      suite.map(sum).join("\n") + "\n",
+      suite.filter(isNotEmpty).map(sum).join("\n") + "\n",
       "utf8",
     );
   }

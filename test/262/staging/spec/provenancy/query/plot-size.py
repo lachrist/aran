@@ -11,38 +11,55 @@ def locate (name):
       "output",
       name,
     ),
-  );
+  )
 
 def load (path):
-  file = open(path)
-  try:
-    return list(map(int, filter(str.strip, file)))
-  finally:
-    file.close()
+  data = []
+  with open(path, "r") as file:
+    for line in file:
+      line = line.strip()
+      if line == "":
+        continue
+      num = int(line)
+      if num is None:
+        raise ValueError("Invalid number: " + line)
+      data.append(num)
+  return data
 
 def filterOutliner (data):
   max = numpy.percentile(data, 97.5)
   return list(filter(lambda x: x <= max, data))
 
-def plotBox(title, names):
-  for name in names:
-    try:
-      plot.boxplot(
-        list(
-          map(
-            lambda name: load(locate(name + ".txt")),
-            names,
-          ),
-        ),
-        tick_labels = names,
-        showfliers = False,
-      )
-      plot.title(title)
-      plot.savefig(locate(title + ".pdf"))
-    finally:
-      plot.close()
+def listName (kind, include, tracking):
+  if (include == "comp" and tracking == "store"):
+    return [
+      "store-comp-external-" + kind,
+      "store-comp-internal-" + kind,
+    ]
+  else:
+    return [tracking + "-" + include + "-" + kind]
 
-def plotBar(name):
+def plotBox(include, kind):
+  names = []
+  for tracking in ["stack", "intra", "inter", "store"]:
+    for name in listName(kind, include, tracking):
+      names.append(name)
+  data = []
+  for name in names:
+    prov = load(locate(name + ".txt"))
+    if kind === "aggr":
+
+    data.append(load(locate(name + ".txt")))
+  plot.boxplot(
+    data,
+    tick_labels = names,
+    showfliers = False,
+  )
+  plot.title(include + "-" + kind)
+  plot.savefig(locate(include + "-" + kind + ".pdf"))
+  plot.close()
+
+def plotHist(name):
   try:
     data = filterOutliner(load(locate(name + ".txt")))
     plot.hist(
@@ -57,19 +74,15 @@ def plotBar(name):
 def main ():
   for include in ["main", "comp"]:
     for kind in ["aggr", "flat"]:
-      plotBox(
-        include + "-" + kind,
-        list(
-          map(
-            lambda tracking: tracking + "-" + include + "-" + kind,
-            ["stack", "intra", "inter", "store"],
-          ),
-        ),
-      )
+      plotBox(include, kind)
   for include in ["main", "comp"]:
     for kind in ["aggr", "flat"]:
       for tracking in ["stack", "intra", "inter", "store"]:
-        plotBar(tracking + "-" + include + "-" + kind)
+        if tracking == "store" and include == "comp":
+          plotHist(tracking + "-" + include + "-internal-" + kind)
+          plotHist(tracking + "-" + include + "-external-" + kind)
+        else:
+          plotHist(tracking + "-" + include + "-" + kind)
 
 if __name__ == "__main__":
   main()
