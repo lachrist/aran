@@ -1,16 +1,17 @@
 import { stat, readFile, writeFile } from "node:fs/promises";
 import { log } from "node:console";
 import { argv } from "node:process";
-import { ARAN_BASE_ENUM } from "./enum.mjs";
+import { AUTO_BASE_ENUM, isAutoBase } from "./enum.mjs";
 import { toBasePath, toMainPath } from "./layout.mjs";
 import { spawn } from "./spawn.mjs";
+import { time_location } from "./base/auto-time.mjs";
 
-const { URL, JSON, Math } = globalThis;
+const { Error, URL, JSON, Math } = globalThis;
 
 /**
  * @typedef {{
- *   meta: import("./enum.d.ts").Meta,
- *   base: import("./enum.d.ts").AranBase,
+ *   meta: import("./enum.js").Meta,
+ *   base: import("./enum.js").AutoBase,
  *   time: number[] | null,
  *   size: number | null,
  *   status: number | null,
@@ -19,9 +20,9 @@ const { URL, JSON, Math } = globalThis;
  */
 
 /**
- * @type {import("./enum.d.ts").Meta[]}
+ * @type {import("./enum.js").Meta[]}
  */
-const metas = [
+const meta_enum = [
   "none",
   "bare",
   "linvail/custom/external",
@@ -43,9 +44,7 @@ const metas = [
  */
 const loadTime = async () => {
   try {
-    return JSON.parse(
-      await readFile(new URL("base/time.json", import.meta.url), "utf8"),
-    );
+    return JSON.parse(await readFile(time_location, "utf8"));
   } catch (error) {
     log(error);
     return null;
@@ -54,8 +53,8 @@ const loadTime = async () => {
 
 /**
  * @type {(
- *   meta: import("./enum.d.ts").Meta,
- *   base: import("./enum.d.ts").AranBase,
+ *   meta: import("./enum.js").Meta,
+ *   base: import("./enum.js").AutoBase,
  * ) => Promise<number | null>}
  */
 const loadSize = async (meta, base) => {
@@ -69,8 +68,8 @@ const loadSize = async (meta, base) => {
 
 /**
  * @type {(
- *   meta: import("./enum.d.ts").Meta,
- *   base: import("./enum.d.ts").AranBase,
+ *   meta: import("./enum.js").Meta,
+ *   base: import("./enum.js").AutoBase,
  * ) => Promise<Result>}
  */
 const exec = async (meta, base) => {
@@ -101,18 +100,21 @@ const exec = async (meta, base) => {
  *   argv: string[],
  * ) => Promise<void>}
  */
-const main = async (_argv) => {
+const main = async (argv) => {
+  if (!argv.every(isAutoBase)) {
+    throw new Error("not all argv are auto target", { cause: { argv } });
+  }
   /** @type {Result[]} */
   const results = [];
-  for (const base of ARAN_BASE_ENUM) {
-    for (const meta of metas) {
+  for (const base of argv.length === 0 ? AUTO_BASE_ENUM : argv) {
+    for (const meta of meta_enum) {
       const result = await exec(meta, base);
       log(result);
       results.push(result);
     }
   }
   await writeFile(
-    new URL("batch-aran.json", import.meta.url),
+    new URL("batch-auto.json", import.meta.url),
     JSON.stringify(results, null, 2),
     "utf8",
   );

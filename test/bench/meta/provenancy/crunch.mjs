@@ -7,6 +7,13 @@ import { isBase } from "../../enum.mjs";
 const { JSON, URL, Error, Promise } = globalThis;
 
 /**
+ * @type {import("../../enum.d.ts").Meta[]}
+ */
+const meta_enum = JSON.parse(
+  await readFile(new URL("meta.json", import.meta.url), "utf8"),
+);
+
+/**
  * @type {(
  *   line: string,
  * ) => boolean}
@@ -36,7 +43,7 @@ const check = (traces) => {
   const length1 = traces[0].length;
   for (const trace of traces) {
     if (trace.length !== length1) {
-      throw new Error("not same length");
+      throw new Error("not same length", { cause: {} });
     }
   }
   const length2 = traces.length;
@@ -96,39 +103,20 @@ const compileSieve =
 
 /**
  * @type {(
- *   suite: {
- *     base: import("../../enum.d.ts").Base,
- *     meta: import("../../enum.d.ts").Meta,
- *   }[],
+ *   base: import("../../enum.d.ts").Base,
  *   config: {
  *     selectBranch: (type: string) => boolean,
  *   },
- * ) => Promise<{
- *   base: import("../../enum.d.ts").Base,
- *   meta: import("../../enum.d.ts").Meta,
- *   prov: number[],
- * }[]>}
+ * ) => Promise<number[][]>}
  */
-export const crunch = async (suite, { selectBranch }) => {
-  const traces = await Promise.all(suite.map(loadTrace));
+export const crunch = async (base, { selectBranch }) => {
+  const traces = await Promise.all(
+    meta_enum.map((meta) => loadTrace({ base, meta })),
+  );
   const sieve = compileSieve(selectBranch);
   check(traces);
-  return traces.map((trace, index) => ({
-    ...suite[index],
-    prov: trace.filter(sieve).map(getBranchProvenancy),
-  }));
+  return traces.map((trace) => trace.filter(sieve).map(getBranchProvenancy));
 };
-
-/**
- * @type {import("../../enum.d.ts").Meta[]}
- */
-const meta_enum = [
-  "provenancy/stack",
-  "provenancy/intra",
-  "provenancy/inter",
-  "provenancy/store/external",
-  "provenancy/store/internal",
-];
 
 /**
  * @type {(
@@ -139,23 +127,13 @@ const main = async (argv) => {
   if (!argv.every(isBase)) {
     throw new Error("not all base", { cause: { argv } });
   }
-  /**
-   * @type {{
-   *   meta: import("../../enum.d.ts").Meta,
-   *   base: import("../../enum.d.ts").Base,
-   * }[]}
-   */
-  const suite = [];
-  for (const meta of meta_enum) {
-    for (const base of argv) {
-      suite.push({ meta, base });
-    }
+  for (const base of argv) {
+    await writeFile(
+      new URL(`trace/${base}.json`, import.meta.url),
+      JSON.stringify(await crunch(base, { selectBranch: (_type) => true })),
+      "utf8",
+    );
   }
-  await writeFile(
-    new URL("crunch.json", import.meta.url),
-    JSON.stringify(crunch(suite, { selectBranch: (_type) => true }), null, 2),
-    "utf8",
-  );
 };
 
 await main(argv.slice(2));

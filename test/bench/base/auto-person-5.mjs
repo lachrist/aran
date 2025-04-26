@@ -1,4 +1,4 @@
-import { main } from "./aran.mjs";
+import { main } from "./auto.mjs";
 const code = `
   class Person {
     name = "anonymous";
@@ -14,4 +14,4 @@ const code = `
   const alice = new Person("Alice", 30);
   alice.greet(); // "Hello, my name is Alice, I'm 30!"
 `;
-await main(code, "module", 1);
+await main(code, "module", 5);

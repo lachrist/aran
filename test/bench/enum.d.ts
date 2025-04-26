@@ -1,15 +1,15 @@
 export type OtherBase = "yo" | "sandbox";
 
-export type AranBase =
-  | "aran-setup"
-  | "aran-123-1"
-  | "aran-123-5"
-  | "aran-fibonacci-1"
-  | "aran-fibonacci-5"
-  | "aran-person-1"
-  | "aran-person-5"
-  | "aran-deltablue-1"
-  | "aran-deltablue-5";
+export type AutoBase =
+  | "auto-123-0"
+  | "auto-123-1"
+  | "auto-123-5"
+  | "auto-fibonacci-1"
+  | "auto-fibonacci-5"
+  | "auto-person-1"
+  | "auto-person-5"
+  | "auto-deltablue-1"
+  | "auto-deltablue-5";
 
 export type OctaneBase =
   | "box2d"
@@ -28,7 +28,7 @@ export type OctaneBase =
   | "typescript"
   | "zlib";
 
-export type ModuleBase = AranBase | OtherBase;
+export type ModuleBase = AutoBase | OtherBase;
 
 export type Base = ModuleBase | OctaneBase;
 

@@ -40,31 +40,31 @@ export const isOctaneBase = (name) => hasOwn(OCTANE_BASE_RECORD, name);
 
 /**
  * @type {{
- *   [key in import("./enum.d.ts").AranBase]: null
+ *   [key in import("./enum.d.ts").AutoBase]: null
  * }}
  */
-export const ARAN_BASE_RECORD = {
-  "aran-setup": null,
-  "aran-123-1": null,
-  "aran-123-5": null,
-  "aran-fibonacci-1": null,
-  "aran-fibonacci-5": null,
-  "aran-person-1": null,
-  "aran-person-5": null,
-  "aran-deltablue-1": null,
-  "aran-deltablue-5": null,
+export const AUTO_BASE_RECORD = {
+  "auto-123-0": null,
+  "auto-123-1": null,
+  "auto-123-5": null,
+  "auto-fibonacci-1": null,
+  "auto-fibonacci-5": null,
+  "auto-person-1": null,
+  "auto-person-5": null,
+  "auto-deltablue-1": null,
+  "auto-deltablue-5": null,
 };
 
-export const ARAN_BASE_ENUM = /** @type {import("./enum.d.ts").AranBase[]} */ (
-  ownKeys(ARAN_BASE_RECORD)
+export const AUTO_BASE_ENUM = /** @type {import("./enum.d.ts").AutoBase[]} */ (
+  ownKeys(AUTO_BASE_RECORD)
 );
 
 /**
  * @type {(
  *   name: string,
- * ) => name is import("./enum.d.ts").AranBase}
+ * ) => name is import("./enum.d.ts").AutoBase}
  */
-export const isAranBase = (name) => hasOwn(ARAN_BASE_RECORD, name);
+export const isAutoBase = (name) => hasOwn(AUTO_BASE_RECORD, name);
 
 /**
  * @type {{
@@ -88,7 +88,7 @@ export const isOtherBase = (name) => hasOwn(OTHER_BASE_RECORD, name);
  *   name: string,
  * ) => name is import("./enum.d.ts").ModuleBase}
  */
-export const isModuleBase = (name) => isOtherBase(name) || isAranBase(name);
+export const isModuleBase = (name) => isOtherBase(name) || isAutoBase(name);
 
 /**
  * @type {(

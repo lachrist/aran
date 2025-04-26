@@ -1,11 +1,12 @@
 import { log } from "node:console";
 import { performance } from "node:perf_hooks";
+import { writeFile } from "node:fs/promises";
 import { parse } from "acorn";
 import { generate } from "astring";
 import { transpile, retropile } from "aran";
-import { writeFile } from "node:fs/promises";
+import { time_location } from "./auto-time.mjs";
 
-const { URL, Math, JSON } = globalThis;
+const { Math, JSON } = globalThis;
 
 /**
  * @type {(
@@ -45,7 +46,7 @@ const benchmark = (code, kind, repetition) => {
  */
 export const main = async (code, kind, repetition) => {
   await writeFile(
-    new URL("time.json", import.meta.url),
+    time_location,
     JSON.stringify(benchmark(code, kind, repetition)),
     "utf8",
   );

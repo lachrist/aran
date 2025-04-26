@@ -1,6 +1,6 @@
 import { stat, readFile } from "fs/promises";
 import { log } from "node:console";
-import { OCTANE_BASE_ENUM } from "./enum.mjs";
+import { isMeta, OCTANE_BASE_ENUM } from "./enum.mjs";
 import { toBasePath, toDumpPath, toMainPath } from "./layout.mjs";
 import { spawn } from "./spawn.mjs";
 import { argv } from "node:process";
@@ -26,15 +26,15 @@ const {
 /**
  * @type {import("./enum.d.ts").Meta[]}
  */
-const metas = [
-  // "none",
-  // "bare",
-  // "linvail/custom/external",
-  // "linvail/custom/internal",
-  // "linvail/standard/external",
-  // "linvail/standard/internal",
-  // "symbolic/intensional/void",
-  // "symbolic/intensional/file",
+const meta_enum = [
+  "none",
+  "bare",
+  "linvail/custom/external",
+  "linvail/custom/internal",
+  "linvail/standard/external",
+  "linvail/standard/internal",
+  "symbolic/intensional/void",
+  "symbolic/intensional/file",
   "symbolic/extensional/void",
 ];
 
@@ -114,20 +114,14 @@ const exec = async (meta, base) => {
  *   argv: string[],
  * ) => Promise<void>}
  */
-const main = async (_argv) => {
+const main = async (argv) => {
+  if (!argv.every(isMeta)) {
+    throw new Error("not all argv are analyses", { cause: { argv } });
+  }
   /** @type {Result[]} */
   const results = [];
   for (const base of OCTANE_BASE_ENUM) {
-    if (
-      base === "box2d" ||
-      base === "crypto" ||
-      base === "deltablue" ||
-      base === "code-load" ||
-      base === "gbemu"
-    ) {
-      continue;
-    }
-    for (const meta of metas) {
+    for (const meta of argv.length === 0 ? meta_enum : argv) {
       const result = await exec(meta, base);
       log(result);
       results.push(result);
