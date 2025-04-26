@@ -52,16 +52,6 @@ const check = (traces) => {
     let progress = branch1.prov;
     for (let index2 = 1; index2 < length2; index2 += 1) {
       const branch2 = traces[index2][index1];
-      if (branch1.kind !== branch2.kind) {
-        throw new Error("kind mismatch", {
-          cause: {
-            index1,
-            index2,
-            branch1,
-            branch2,
-          },
-        });
-      }
       if (branch1.hash !== branch2.hash) {
         throw new Error("hash mismatch", {
           cause: {
@@ -91,21 +81,11 @@ const getBranchProvenancy = ({ prov }) => prov;
 
 /**
  * @type {(
- *   selectBranch: (type: string) => boolean,
- * ) => (
- *   branch: import("./branch.d.ts").Branch,
- * ) => boolean}
- */
-const compileSieve =
-  (selectBranch) =>
-  ({ hash }) =>
-    selectBranch(hash.split(":")[0]);
-
-/**
- * @type {(
  *   base: import("../../enum.d.ts").Base,
  *   config: {
- *     selectBranch: (type: string) => boolean,
+ *     selectBranch: (
+ *       branch: import("./branch.d.ts").Branch,
+ *     ) => boolean,
  *   },
  * ) => Promise<number[][]>}
  */
@@ -113,9 +93,10 @@ export const crunch = async (base, { selectBranch }) => {
   const traces = await Promise.all(
     meta_enum.map((meta) => loadTrace({ base, meta })),
   );
-  const sieve = compileSieve(selectBranch);
   check(traces);
-  return traces.map((trace) => trace.filter(sieve).map(getBranchProvenancy));
+  return traces.map((trace) =>
+    trace.filter(selectBranch).map(getBranchProvenancy),
+  );
 };
 
 /**
@@ -130,7 +111,7 @@ const main = async (argv) => {
   for (const base of argv) {
     await writeFile(
       new URL(`trace/${base}.json`, import.meta.url),
-      JSON.stringify(await crunch(base, { selectBranch: (_type) => true })),
+      JSON.stringify(await crunch(base, { selectBranch: (_branch) => true })),
       "utf8",
     );
   }

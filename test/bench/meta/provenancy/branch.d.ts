@@ -1,9 +1,10 @@
-import { TestKind } from "aran";
+import type { TestKind } from "aran";
+import type { Node } from "estree-sentry";
 
 export type Branch = {
-  kind: TestKind;
+  type: Node<{}>["type"];
   prov: number;
-  hash: string;
+  hash: number;
 };
 
 export type Trace = Branch[];

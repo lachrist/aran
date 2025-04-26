@@ -1,5 +1,6 @@
 import { closeSync, openSync, writeSync } from "node:fs";
 import { printTraceName, trace_home } from "./naming.mjs";
+import { digestBranch } from "./branch.mjs";
 
 const { URL, process, Array } = globalThis;
 
@@ -11,7 +12,7 @@ const { URL, process, Array } = globalThis;
  *     buffer_length: number,
  *   },
  * ) => (
- *   kind: import("aran").TestKind,
+ *   type: import("aran").TestKind,
  *   prov: number,
  *   hash: import("./location.d.ts").NodeHash,
  * ) => void}
@@ -28,11 +29,11 @@ export const compileRecordBranch = ({ buffer_length, meta, base }) => {
     closeSync(handle);
     index = 0;
   });
-  return (kind, prov, hash) => {
+  return (_kind, prov, hash) => {
     if (index >= buffer_length) {
       writeSync(handle, buffer.join(""), null, "utf8");
       index = 0;
     }
-    buffer[index++] = `${kind}|${prov}|${hash}\n`;
+    buffer[index++] = digestBranch(prov, hash);
   };
 };
