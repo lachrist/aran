@@ -24,16 +24,16 @@ const listOctaneFile = (octane) => {
 
 /**
  * @type {(
- *   octane: import("./enum.d.ts").OctaneBase,
+ *   base: import("./enum.d.ts").OctaneBase,
  * ) => Promise<string>}
  */
-export const bundleOctane = async (octane) => {
+export const bundleOctane = async (base) => {
   let bundle = "";
   bundle += "// @ts-nocheck\n";
   bundle += "/* eslint-disable */\n";
   bundle += await readFile(new URL("base.js", HOME), "utf8");
   bundle += "\n\n\n";
-  for (const file of listOctaneFile(octane)) {
+  for (const file of listOctaneFile(base)) {
     bundle += await readFile(new URL(`${file}.js`, HOME), "utf8");
     bundle += "\n\n\n";
   }

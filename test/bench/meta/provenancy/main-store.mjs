@@ -10,7 +10,6 @@ import { compileRecordBranch } from "./record.mjs";
 
 const {
   Error,
-  URL,
   Function,
   eval: evalGlobal,
   Object: { is },
@@ -187,11 +186,12 @@ const createAdvice = ({
 /**
  * @type {(
  *   config: {
+ *     target: import("../../enum.d.ts").Base,
  *     internalize_global_scope: boolean,
  *   },
  * ) => void}
  */
-export const setup = ({ internalize_global_scope }) => {
+export const setup = ({ target, internalize_global_scope }) => {
   const intrinsics = compileIntrinsicRecord(globalThis);
   const advice = createAdvice({
     dir: (value) => {
@@ -199,10 +199,8 @@ export const setup = ({ internalize_global_scope }) => {
     },
     internalize_global_scope,
     recordBranch: compileRecordBranch({
-      output: new URL(
-        `trace/store-${internalize_global_scope ? "internal" : "external"}.txt`,
-        import.meta.url,
-      ),
+      base: target,
+      meta: `provenancy/store/${internalize_global_scope ? "internal" : "external"}`,
       buffer_length: 1000,
     }),
     intrinsics,

@@ -1,16 +1,11 @@
-import { stat, readFile } from "fs/promises";
+import { stat, readFile, writeFile } from "node:fs/promises";
 import { log } from "node:console";
-import { OCTANE_BASE_ENUM } from "./enum.mjs";
-import { toBasePath, toDumpPath, toMainPath } from "./layout.mjs";
-import { spawn } from "./spawn.mjs";
 import { argv } from "node:process";
+import { ARAN_BASE_ENUM } from "./enum.mjs";
+import { toBasePath, toMainPath } from "./layout.mjs";
+import { spawn } from "./spawn.mjs";
 
-const {
-  Error,
-  Array: { isArray },
-  JSON,
-  Math,
-} = globalThis;
+const { URL, JSON, Math } = globalThis;
 
 /**
  * @typedef {{
@@ -27,53 +22,30 @@ const {
  * @type {import("./enum.d.ts").Meta[]}
  */
 const metas = [
-  // "none",
-  // "bare",
-  // "linvail/custom/external",
-  // "linvail/custom/internal",
-  // "linvail/standard/external",
-  // "linvail/standard/internal",
-  // "symbolic/intensional/void",
-  // "symbolic/intensional/file",
+  "none",
+  "bare",
+  "linvail/custom/external",
+  "linvail/custom/internal",
+  "linvail/standard/external",
+  "linvail/standard/internal",
+  "symbolic/intensional/void",
+  "symbolic/intensional/file",
   "symbolic/extensional/void",
+  "provenancy/stack",
+  "provenancy/intra",
+  "provenancy/inter",
+  "provenancy/store/external",
+  "provenancy/store/internal",
 ];
 
 /**
- * @type {(x: number) => number}
+ * @type {() => Promise<number[] | null>}
  */
-const devide1000 = (x) => x / 1000;
-
-/**
- * @type {(
- *   meta: import("./enum.d.ts").Meta,
- *   base: import("./enum.d.ts").OctaneBase,
- * ) => Promise<number[]>}
- */
-const readTime = async (meta, base) => {
-  const path = toDumpPath(meta, base);
-  const content = await readFile(path, "utf8");
-  /** @type {unknown} */
-  const time = JSON.parse(content);
-  if (!isArray(time)) {
-    throw new Error("not array");
-  }
-  for (const item of time) {
-    if (typeof item !== "number") {
-      throw new Error("not number");
-    }
-  }
-  return time.map(devide1000);
-};
-
-/**
- * @type {(
- *   meta: import("./enum.d.ts").Meta,
- *   base: import("./enum.d.ts").OctaneBase,
- * ) => Promise<number[] | null>}
- */
-const readTimeMaybe = async (meta, base) => {
+const loadTime = async () => {
   try {
-    return await readTime(meta, base);
+    return JSON.parse(
+      await readFile(new URL("base/time.json", import.meta.url), "utf8"),
+    );
   } catch (error) {
     log(error);
     return null;
@@ -83,11 +55,26 @@ const readTimeMaybe = async (meta, base) => {
 /**
  * @type {(
  *   meta: import("./enum.d.ts").Meta,
- *   base: import("./enum.d.ts").OctaneBase,
+ *   base: import("./enum.d.ts").AranBase,
+ * ) => Promise<number | null>}
+ */
+const loadSize = async (meta, base) => {
+  try {
+    return Math.round((await stat(toBasePath(meta, base, 2))).size / 1024);
+  } catch (error) {
+    log(error);
+    return null;
+  }
+};
+
+/**
+ * @type {(
+ *   meta: import("./enum.d.ts").Meta,
+ *   base: import("./enum.d.ts").AranBase,
  * ) => Promise<Result>}
  */
 const exec = async (meta, base) => {
-  log(`\nEXEC ${meta} ${base}...`);
+  log(`\nRun ${meta} ${base}...`);
   {
     const { status, signal } = await spawn("node", [
       "--max-old-space-size=8192",
@@ -104,8 +91,8 @@ const exec = async (meta, base) => {
     "--max-semi-space-size=256",
     toMainPath(meta, base),
   ]);
-  const size = Math.round((await stat(toBasePath(meta, base, 2))).size / 1024);
-  const time = await readTimeMaybe(meta, base);
+  const size = await loadSize(meta, base);
+  const time = await loadTime();
   return { status, signal, meta, base, time, size };
 };
 
@@ -117,23 +104,18 @@ const exec = async (meta, base) => {
 const main = async (_argv) => {
   /** @type {Result[]} */
   const results = [];
-  for (const base of OCTANE_BASE_ENUM) {
-    if (
-      base === "box2d" ||
-      base === "crypto" ||
-      base === "deltablue" ||
-      base === "code-load" ||
-      base === "gbemu"
-    ) {
-      continue;
-    }
+  for (const base of ARAN_BASE_ENUM) {
     for (const meta of metas) {
       const result = await exec(meta, base);
       log(result);
       results.push(result);
     }
   }
-  log(JSON.stringify(results, null, 2));
+  await writeFile(
+    new URL("batch-aran.json", import.meta.url),
+    JSON.stringify(results, null, 2),
+    "utf8",
+  );
 };
 
 await main(argv.slice(2));

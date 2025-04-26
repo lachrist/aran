@@ -1,6 +1,6 @@
 import { writeFile } from "node:fs/promises";
-import { bundleModule } from "./module.mjs";
-import { bundleOctane } from "./octane.mjs";
+import { bundleModule } from "./bundle-module.mjs";
+import { bundleOctane } from "./bundle-octane.mjs";
 import { isMeta, isModuleBase, isOctaneBase } from "./enum.mjs";
 import { toBasePath, toDumpPath, toMainPath } from "./layout.mjs";
 
@@ -64,6 +64,7 @@ export const compileModule = async (meta, base) => {
     [
       "// @ts-nocheck",
       "/* eslint-disable */",
+      `globalThis.__TARGET__ = ${JSON.stringify(base)};`,
       `await import('../meta/${meta}/main.mjs');`,
       `await import('../../../${base_path}');`,
       "",
@@ -92,6 +93,7 @@ export const compileOctane = async (meta, base) => {
       "/* eslint-disable */",
       "import { runInThisContext } from 'node:vm';",
       "import { readFile, writeFile } from 'node:fs/promises';",
+      `globalThis.__TARGET__ = ${JSON.stringify(base)};`,
       `await import('../meta/${meta}/main.mjs');`,
       `const code = await readFile(${JSON.stringify(base_path)}, 'utf8');`,
       `const dump = runInThisContext(code, { filename: ${JSON.stringify(base_path)} });`,

@@ -1,11 +1,13 @@
 import { closeSync, openSync, writeSync } from "node:fs";
+import { printTraceName, trace_home } from "./naming.mjs";
 
-const { process, Array } = globalThis;
+const { URL, process, Array } = globalThis;
 
 /**
  * @type {(
  *   config: {
- *     output: URL,
+ *     meta: import("../../enum.d.ts").Meta,
+ *     base: import("../../enum.d.ts").Base,
  *     buffer_length: number,
  *   },
  * ) => (
@@ -14,8 +16,11 @@ const { process, Array } = globalThis;
  *   hash: import("./location.d.ts").NodeHash,
  * ) => void}
  */
-export const compileRecordBranch = ({ output, buffer_length }) => {
-  const handle = openSync(output, "w");
+export const compileRecordBranch = ({ buffer_length, meta, base }) => {
+  const handle = openSync(
+    new URL(printTraceName({ base, meta }), trace_home),
+    "w",
+  );
   const buffer = new Array(buffer_length);
   let index = 0;
   process.on("exit", () => {

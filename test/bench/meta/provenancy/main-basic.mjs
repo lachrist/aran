@@ -7,7 +7,6 @@ import {
 import { compileRecordBranch } from "./record.mjs";
 
 const {
-  URL,
   WeakMap,
   Error,
   Object: { is },
@@ -405,17 +404,19 @@ const createAdvice = ({ recordBranch, tracking, intrinsics }) => {
 /**
  * @type {(
  *   config: {
+ *     target: import("../../enum.d.ts").Base,
  *     tracking: "stack" | "inter" | "intra",
  *   },
  * ) => void}
  */
-export const setup = ({ tracking }) => {
+export const setup = ({ target, tracking }) => {
   const intrinsics = compileIntrinsicRecord(globalThis);
   const advice = createAdvice({
     tracking,
     intrinsics,
     recordBranch: compileRecordBranch({
-      output: new URL(`trace/${tracking}.txt`, import.meta.url),
+      meta: `provenancy/${tracking}`,
+      base: target,
       buffer_length: 1000,
     }),
   });

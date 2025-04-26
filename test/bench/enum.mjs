@@ -91,6 +91,13 @@ export const isOtherBase = (name) => hasOwn(OTHER_BASE_RECORD, name);
 export const isModuleBase = (name) => isOtherBase(name) || isAranBase(name);
 
 /**
+ * @type {(
+ *   name: string,
+ * ) => name is import("./enum.d.ts").Base}
+ */
+export const isBase = (name) => isModuleBase(name) || isOctaneBase(name);
+
+/**
  * @type {{
  *   [key in import("./enum.d.ts").Meta]: null
  * }}
