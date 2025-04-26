@@ -15,6 +15,7 @@ const analysis_pointcut_record = {
   "primitive@after": null,
   "intrinsic@after": null,
   "yield@after": null,
+  "eval@before": null,
   "import@after": null,
   "await@after": null,
   "closure@after": null,

@@ -35,10 +35,10 @@
   "scripts": {
     "gen-doc": "sh doc/build.sh test && npx http-server doc/out -p 8080",
     "dep-doc": "sh doc/deploy.sh",
-    "lint": "npx eslint 'lint/**/*.mjs' 'test/**/*.mjs' 'lib/**/*.mjs'",
+    "check-lint": "npx eslint",
     "check-type": "npx tsc -p tsconfig.json && npx tsc -p doc/tsconfig.json",
     "check-format": "npx prettier -c '**/*.(mjs|d.ts)'",
-    "check": "npm run lint && npm run check-type && npm run check-format && npm run test-riuntime",
+    "check": "npm run check-lint && npm run check-type && npm run check-format",
     "document": "npx typedoc && open page/typedoc/index.html",
     "deploy-page": "sh page.sh",
     "serve-demo": "npx http-server page/demo",

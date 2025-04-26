@@ -80,6 +80,17 @@ const config = {
  */
 export default [
   {
+    ignores: [
+      "coverage/",
+      "node_modules/",
+      "test/262/main/record/",
+      "test/bench/out/",
+      "test262/",
+      "octane/",
+      "vendor/",
+    ],
+  },
+  {
     ...config,
     files: ["lib/**/*.mjs"],
     ignores: ["lib/**/*.test.mjs", "lib/**/*.fixture.mjs"],

@@ -1,10 +1,8 @@
 /coverage/
-/graveyard/
-/img/
 /node_modules/
-/test262/
 /octane/
-/docs/demo/**/*-source.mjs
-/docs/demo/**/*-bundle.mjs
-/docs/demo/trace.mjs
-*.md
+/test/bench/meta/symbolic/extensional/analysis.inst.mjs
+/test/bench/out/
+/test/test262/main/record/
+/test262/
+/vendor/
