@@ -27,14 +27,15 @@ const {
  * @type {import("./enum.js").Meta[]}
  */
 const metas = [
-  "none",
-  "bare",
-  "linvail/custom/external",
-  "linvail/custom/internal",
-  "linvail/standard/external",
-  "linvail/standard/internal",
-  "symbolic/intensional/void",
-  "symbolic/intensional/file",
+  // "none",
+  // "bare",
+  // "linvail/custom/external",
+  // "linvail/custom/internal",
+  // "linvail/standard/external",
+  // "linvail/standard/internal",
+  // "symbolic/intensional/void",
+  // "symbolic/intensional/file",
+  "symbolic/extensional/void",
 ];
 
 /**
@@ -117,6 +118,15 @@ const main = async (_argv) => {
   /** @type {Result[]} */
   const results = [];
   for (const base of OCTANE_BASE_ENUM) {
+    if (
+      base === "box2d" ||
+      base === "crypto" ||
+      base === "deltablue" ||
+      base === "code-load" ||
+      base === "gbemu"
+    ) {
+      continue;
+    }
     for (const meta of metas) {
       const result = await exec(meta, base);
       log(result);

@@ -1,1 +1,1 @@
-eval("123;");
+console.log(new Function("return 123"));

@@ -3,6 +3,7 @@ export type Pointcut =
   | "intrinsic@after"
   | "yield@after"
   | "import@after"
+  | "eval@before"
   | "await@after"
   | "closure@after"
   | "block@declaration"

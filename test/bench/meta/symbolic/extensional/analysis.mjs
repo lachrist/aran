@@ -71,6 +71,9 @@ const compileAnalysisAdvice = ({ register, fetch, record }) => ({
     }
     return value;
   },
+  "eval@before": (_state, _code, _hash) => {
+    throw new Error("dynamic eval code is not supported");
+  },
   "intrinsic@after": (_state, name, value, hash) => {
     const index = register(value);
     if (index) {

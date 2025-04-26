@@ -46,9 +46,6 @@ def plotBox(include, kind):
       names.append(name)
   data = []
   for name in names:
-    prov = load(locate(name + ".txt"))
-    if kind === "aggr":
-
     data.append(load(locate(name + ".txt")))
   plot.boxplot(
     data,

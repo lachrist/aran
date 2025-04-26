@@ -75,6 +75,11 @@ export const META_RECORD = {
   "symbolic/intensional/file": null,
   "symbolic/extensional/void": null,
   "symbolic/extensional/file": null,
+  "provenancy/stack": null,
+  "provenancy/intra": null,
+  "provenancy/inter": null,
+  "provenancy/store/external": null,
+  "provenancy/store/internal": null,
 };
 
 /**

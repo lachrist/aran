@@ -1,12 +1,19 @@
-import { parse } from "acorn";
-import { transpile, retropile } from "aran";
-import { generate } from "astring";
 import { log } from "node:console";
+import { readFile } from "node:fs/promises";
+import { parse } from "acorn";
+import { generate } from "astring";
+import { transpile, retropile } from "aran";
 
-const root = parse("123;", {
-  locations: true,
-  sourceType: "module",
-  ecmaVersion: 2024,
-});
+const { URL } = globalThis;
 
-log(generate(retropile(transpile({ kind: "module", path: "$.mjs", root }))));
+const root = parse(
+  await readFile(new URL("../base/input.mjs", import.meta.url), "utf8"),
+  { sourceType: "module", ecmaVersion: 2024 },
+);
+
+log(
+  generate(retropile(transpile({ kind: "module", path: "$.mjs", root }))).slice(
+    0,
+    100,
+  ),
+);

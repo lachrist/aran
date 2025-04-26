@@ -1,4 +1,4 @@
-import { dir, log } from "node:console";
+import { dir } from "node:console";
 import { createRuntime, toStandardAdvice } from "linvail/runtime";
 import { isStandardPrimitive } from "./primitive.mjs";
 import { compileIntrinsicRecord } from "aran";
@@ -6,8 +6,14 @@ import {
   advice_global_variable,
   intrinsic_global_variable,
 } from "./globals.mjs";
+import { compileRecordBranch } from "./record.mjs";
 
 const {
+  Error,
+  URL,
+  Function,
+  eval: evalGlobal,
+  Object: { is },
   Reflect: { defineProperty },
 } = globalThis;
 
@@ -75,13 +81,13 @@ const wrapHostReference = (host, kind) => ({
  *     recordBranch: (
  *       kind: import("aran").TestKind,
  *       prov: number,
- *       tag: import("./location.d.ts").NodeHash,
+ *       tag: import("./location.js").NodeHash,
  *     ) => void,
  *     intrinsics: import("aran").IntrinsicRecord,
  *   },
  * ) => import("aran").StandardAdvice<{
  *   State: null,
- *   Tag: import("./location.d.ts").NodeHash,
+ *   Tag: import("./location.js").NodeHash,
  *   ScopeValue: import("linvail").Wrapper,
  *   StackValue: import("linvail").Wrapper,
  *   OtherValue: import("linvail").Wrapper | import("linvail").Value,
@@ -141,6 +147,12 @@ const createAdvice = ({
       return value.inner;
     },
     "apply@around": (_state, callee, that, input, _tag) => {
+      if (
+        internalize_global_scope &&
+        (is(callee.inner, Function) || is(callee.inner, evalGlobal))
+      ) {
+        throw new Error("Dynamic code evaluation is not supported");
+      }
       const result = apply(callee, that, input);
       if (isStandardPrimitive(result.inner)) {
         let prov = 1;
@@ -160,8 +172,15 @@ const createAdvice = ({
         return result;
       }
     },
-    "construct@around": (_state, callee, input, _tag) =>
-      construct(callee, input),
+    "construct@around": (_state, callee, input, _tag) => {
+      if (
+        internalize_global_scope &&
+        (is(callee.inner, Function) || is(callee.inner, evalGlobal))
+      ) {
+        throw new Error("Dynamic code evaluation is not supported");
+      }
+      return construct(callee, input);
+    },
   };
 };
 
@@ -179,7 +198,13 @@ export const setup = ({ internalize_global_scope }) => {
       dir(value, { showProxy: true, showHidden: true });
     },
     internalize_global_scope,
-    recordBranch: log,
+    recordBranch: compileRecordBranch({
+      output: new URL(
+        `trace/store-${internalize_global_scope ? "internal" : "external"}.txt`,
+        import.meta.url,
+      ),
+      buffer_length: 1000,
+    }),
     intrinsics,
   });
   defineProperty(globalThis, intrinsic_global_variable, {

@@ -21,7 +21,7 @@ const {
 const listKey = /** @type {any} */ (ownKeys);
 
 /**
- * @type {{ [k in import("./pointcut.d.ts").Pointcut]: null }}
+ * @type {{ [k in import("./pointcut.js").Pointcut]: null }}
  */
 const pointcut_record = {
   "block@setup": null,
@@ -62,7 +62,7 @@ const remove = {
 /**
  * @type {(
  *   tracking: "stack" | "inter" | "intra",
- * ) => import("./pointcut.d.ts").Pointcut[]}
+ * ) => import("./pointcut.js").Pointcut[]}
  */
 export const createPointcut = (tracking) =>
   listKey(pointcut_record).filter((kind) => !hasOwn(remove[tracking], kind));

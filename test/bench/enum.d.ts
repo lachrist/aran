@@ -32,4 +32,9 @@ export type Meta =
   | "symbolic/intensional/void"
   | "symbolic/intensional/file"
   | "symbolic/extensional/void"
-  | "symbolic/extensional/file";
+  | "symbolic/extensional/file"
+  | "provenancy/stack"
+  | "provenancy/intra"
+  | "provenancy/inter"
+  | "provenancy/store/internal"
+  | "provenancy/store/external";

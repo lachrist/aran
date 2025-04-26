@@ -1,1 +1,1 @@
-export * from "../instrument.mjs";
+export { default } from "../instrument.mjs";
