@@ -15,7 +15,7 @@ const {
 /**
  * @typedef {{
  *   meta: import("./enum.d.ts").Meta,
- *   base: import("./enum.d.ts").OctaneBase,
+ *   base: import("./enum.d.ts").AranBase,
  *   time: number[] | null,
  *   size: number | null,
  *   status: number | null,

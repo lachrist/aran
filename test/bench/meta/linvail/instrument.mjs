@@ -37,7 +37,7 @@ const weave = (root, { advice_format }) => {
  *     global_declarative_record: "builtin" | "emulate",
  *     advice_format: "standard" | "custom",
  *   },
- * ) => import("../../instrument.js").Instrument}
+ * ) => import("../../instrument.d.ts").Instrument}
  */
 export const compileInstrument =
   ({ global_declarative_record, advice_format }) =>

@@ -1,19 +1,52 @@
 import { log } from "node:console";
-import { readFile } from "node:fs/promises";
+import { performance } from "node:perf_hooks";
 import { parse } from "acorn";
 import { generate } from "astring";
 import { transpile, retropile } from "aran";
+import { writeFile } from "node:fs/promises";
 
-const { URL } = globalThis;
+const { URL, Math, JSON } = globalThis;
 
-const root = parse(
-  await readFile(new URL("../base/input.mjs", import.meta.url), "utf8"),
-  { sourceType: "module", ecmaVersion: 2024 },
-);
+/**
+ * @type {(
+ *   code: string,
+ *   kind: "module" | "script",
+ *   repetition: number,
+ * ) => number[]}
+ */
+const benchmark = (code, kind, repetition) => {
+  const times = [];
+  for (let index = 1; index <= repetition; index++) {
+    log("Run", index, "/", repetition, "...");
+    const start = performance.now();
+    const root = generate(
+      retropile(
+        transpile({
+          kind,
+          path: "main",
+          root: parse(code, { sourceType: kind, ecmaVersion: 2024 }),
+        }),
+      ),
+    );
+    const end = performance.now();
+    const elapsed = Math.round(1000 * (end - start)) / 1000;
+    log("Elapsed:", elapsed, "ms", ">>", "Output:", root.length);
+    times.push(elapsed);
+  }
+  return times;
+};
 
-log(
-  generate(retropile(transpile({ kind: "module", path: "$.mjs", root }))).slice(
-    0,
-    100,
-  ),
-);
+/**
+ * @type {(
+ *   code: string,
+ *   kind: "module" | "script",
+ *   repetition: number,
+ * ) => Promise<void>}
+ */
+export const main = async (code, kind, repetition) => {
+  await writeFile(
+    new URL("time.json", import.meta.url),
+    JSON.stringify(benchmark(code, kind, repetition)),
+    "utf8",
+  );
+};

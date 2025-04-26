@@ -40,21 +40,55 @@ export const isOctaneBase = (name) => hasOwn(OCTANE_BASE_RECORD, name);
 
 /**
  * @type {{
- *   [key in import("./enum.d.ts").ModuleBase]: null
+ *   [key in import("./enum.d.ts").AranBase]: null
  * }}
  */
-export const MODULE_BASE_RECORD = {
+export const ARAN_BASE_RECORD = {
+  "aran-setup": null,
+  "aran-123-1": null,
+  "aran-123-5": null,
+  "aran-fibonacci-1": null,
+  "aran-fibonacci-5": null,
+  "aran-person-1": null,
+  "aran-person-5": null,
+  "aran-deltablue-1": null,
+  "aran-deltablue-5": null,
+};
+
+export const ARAN_BASE_ENUM = /** @type {import("./enum.d.ts").AranBase[]} */ (
+  ownKeys(ARAN_BASE_RECORD)
+);
+
+/**
+ * @type {(
+ *   name: string,
+ * ) => name is import("./enum.d.ts").AranBase}
+ */
+export const isAranBase = (name) => hasOwn(ARAN_BASE_RECORD, name);
+
+/**
+ * @type {{
+ *   [key in import("./enum.d.ts").OtherBase]: null
+ * }}
+ */
+export const OTHER_BASE_RECORD = {
   yo: null,
   sandbox: null,
-  aran: null,
 };
+
+/**
+ * @type {(
+ *   name: string,
+ * ) => name is import("./enum.d.ts").OtherBase}
+ */
+export const isOtherBase = (name) => hasOwn(OTHER_BASE_RECORD, name);
 
 /**
  * @type {(
  *   name: string,
  * ) => name is import("./enum.d.ts").ModuleBase}
  */
-export const isModuleBase = (name) => hasOwn(MODULE_BASE_RECORD, name);
+export const isModuleBase = (name) => isOtherBase(name) || isAranBase(name);
 
 /**
  * @type {{

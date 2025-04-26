@@ -11,7 +11,7 @@ const { process, Array } = globalThis;
  * ) => (
  *   kind: import("aran").TestKind,
  *   prov: number,
- *   hash: import("./location.js").NodeHash,
+ *   hash: import("./location.d.ts").NodeHash,
  * ) => void}
  */
 export const compileRecordBranch = ({ output, buffer_length }) => {

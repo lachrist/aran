@@ -81,13 +81,13 @@ const wrapHostReference = (host, kind) => ({
  *     recordBranch: (
  *       kind: import("aran").TestKind,
  *       prov: number,
- *       tag: import("./location.js").NodeHash,
+ *       tag: import("./location.d.ts").NodeHash,
  *     ) => void,
  *     intrinsics: import("aran").IntrinsicRecord,
  *   },
  * ) => import("aran").StandardAdvice<{
  *   State: null,
- *   Tag: import("./location.js").NodeHash,
+ *   Tag: import("./location.d.ts").NodeHash,
  *   ScopeValue: import("linvail").Wrapper,
  *   StackValue: import("linvail").Wrapper,
  *   OtherValue: import("linvail").Wrapper | import("linvail").Value,

@@ -5,7 +5,7 @@ const { Error } = globalThis;
 
 /**
  * @type {(
- *   base: import("./enum.js").ModuleBase,
+ *   base: import("./enum.d.ts").ModuleBase,
  * ) => Promise<string>}
  */
 export const bundleModule = async (base) => {

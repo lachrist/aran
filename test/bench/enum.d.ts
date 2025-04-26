@@ -1,4 +1,15 @@
-export type ModuleBase = "yo" | "sandbox" | "aran";
+export type OtherBase = "yo" | "sandbox";
+
+export type AranBase =
+  | "aran-setup"
+  | "aran-123-1"
+  | "aran-123-5"
+  | "aran-fibonacci-1"
+  | "aran-fibonacci-5"
+  | "aran-person-1"
+  | "aran-person-5"
+  | "aran-deltablue-1"
+  | "aran-deltablue-5";
 
 export type OctaneBase =
   | "box2d"
@@ -16,6 +27,8 @@ export type OctaneBase =
   | "splay"
   | "typescript"
   | "zlib";
+
+export type ModuleBase = AranBase | OtherBase;
 
 export type Base = ModuleBase | OctaneBase;
 
