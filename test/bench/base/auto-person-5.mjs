@@ -14,4 +14,4 @@ const code = `
   const alice = new Person("Alice", 30);
   alice.greet(); // "Hello, my name is Alice, I'm 30!"
 `;
-await main(code, "module", 5);
+await main(code, "script", 5);

@@ -5,4 +5,4 @@ const code = `
     return fibo(n - 1) + fibo(n - 2);
   }
 `;
-await main(code, "module", 1);
+await main(code, "script", 1);

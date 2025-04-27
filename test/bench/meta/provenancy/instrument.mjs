@@ -99,7 +99,7 @@ export const compileInstrument =
               path: "$",
               kind,
               root: parse(code, {
-                locations: false,
+                locations: true,
                 sourceType: kind,
                 ecmaVersion: 2024,
               }),

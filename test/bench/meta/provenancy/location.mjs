@@ -9,6 +9,15 @@ const {
 const colon = [":"];
 
 /**
+ * @type {(
+ *   loc: unknown
+ * ) => string}
+ */
+// @ts-ignore
+// eslint-disable-next-line local/no-optional-chaining
+const _printLocation = (loc) => `#${loc?.start?.line}-${loc?.start?.column}`;
+
+/**
  * @type {import("aran").Digest<{
  *   NodeHash: import("./location.d.ts").NodeHash,
  * }>}

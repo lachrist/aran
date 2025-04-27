@@ -1,7 +1,0 @@
-[
-  "provenancy/stack",
-  "provenancy/intra",
-  "provenancy/inter",
-  "provenancy/store/external",
-  "provenancy/store/internal"
-]

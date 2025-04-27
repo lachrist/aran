@@ -8,7 +8,7 @@ const {
  *   [key in import("./enum.d.ts").OctaneBase]: null
  * }}
  */
-export const OCTANE_BASE_RECORD = {
+export const octane_base_record = {
   "box2d": null,
   "code-load": null,
   "crypto": null,
@@ -26,9 +26,9 @@ export const OCTANE_BASE_RECORD = {
   "zlib": null,
 };
 
-export const OCTANE_BASE_ENUM =
+export const octane_base_enum =
   /** @type {import("./enum.d.ts").OctaneBase[]} */ (
-    ownKeys(OCTANE_BASE_RECORD)
+    ownKeys(octane_base_record)
   );
 
 /**
@@ -36,14 +36,14 @@ export const OCTANE_BASE_ENUM =
  *   name: string,
  * ) => name is import("./enum.d.ts").OctaneBase}
  */
-export const isOctaneBase = (name) => hasOwn(OCTANE_BASE_RECORD, name);
+export const isOctaneBase = (name) => hasOwn(octane_base_record, name);
 
 /**
  * @type {{
  *   [key in import("./enum.d.ts").AutoBase]: null
  * }}
  */
-export const AUTO_BASE_RECORD = {
+export const auto_base_record = {
   "auto-123-0": null,
   "auto-123-1": null,
   "auto-123-5": null,
@@ -55,8 +55,8 @@ export const AUTO_BASE_RECORD = {
   "auto-deltablue-5": null,
 };
 
-export const AUTO_BASE_ENUM = /** @type {import("./enum.d.ts").AutoBase[]} */ (
-  ownKeys(AUTO_BASE_RECORD)
+export const auto_base_enum = /** @type {import("./enum.d.ts").AutoBase[]} */ (
+  ownKeys(auto_base_record)
 );
 
 /**
@@ -64,14 +64,14 @@ export const AUTO_BASE_ENUM = /** @type {import("./enum.d.ts").AutoBase[]} */ (
  *   name: string,
  * ) => name is import("./enum.d.ts").AutoBase}
  */
-export const isAutoBase = (name) => hasOwn(AUTO_BASE_RECORD, name);
+export const isAutoBase = (name) => hasOwn(auto_base_record, name);
 
 /**
  * @type {{
  *   [key in import("./enum.d.ts").OtherBase]: null
  * }}
  */
-export const OTHER_BASE_RECORD = {
+export const other_base_record = {
   yo: null,
   sandbox: null,
 };
@@ -81,7 +81,7 @@ export const OTHER_BASE_RECORD = {
  *   name: string,
  * ) => name is import("./enum.d.ts").OtherBase}
  */
-export const isOtherBase = (name) => hasOwn(OTHER_BASE_RECORD, name);
+export const isOtherBase = (name) => hasOwn(other_base_record, name);
 
 /**
  * @type {(
@@ -99,23 +99,22 @@ export const isBase = (name) => isModuleBase(name) || isOctaneBase(name);
 
 /**
  * @type {{
- *   [key in import("./enum.d.ts").Meta]: null
+ *   [key in import("./enum.d.ts").SymbolicMeta]: null
  * }}
  */
-export const META_RECORD = {
-  "none": null,
-  "bare": null,
-  "full": null,
-  "track": null,
-  "linvail": null,
-  "linvail/standard/internal": null,
-  "linvail/standard/external": null,
-  "linvail/custom/internal": null,
-  "linvail/custom/external": null,
+export const symbolic_meta_record = {
   "symbolic/intensional/void": null,
   "symbolic/intensional/file": null,
   "symbolic/extensional/void": null,
   "symbolic/extensional/file": null,
+};
+
+/**
+ * @type {{
+ *   [key in import("./enum.d.ts").ProvenancyMeta]: null
+ * }}
+ */
+export const provenancy_meta_record = {
   "provenancy/stack": null,
   "provenancy/intra": null,
   "provenancy/inter": null,
@@ -123,9 +122,48 @@ export const META_RECORD = {
   "provenancy/store/internal": null,
 };
 
+export const provenancy_meta_enum =
+  /** @type {import("./enum.d.ts").ProvenancyMeta[]} */ (
+    ownKeys(provenancy_meta_record)
+  );
+
+/**
+ * @type {{
+ *   [key in import("./enum.d.ts").LinvailMeta]: null
+ * }}
+ */
+export const linvail_meta_record = {
+  "linvail/standard/internal": null,
+  "linvail/standard/external": null,
+  "linvail/custom/internal": null,
+  "linvail/custom/external": null,
+};
+
+/**
+ * @type {{
+ *   [key in import("./enum.d.ts").Meta]: null
+ * }}
+ */
+export const meta_record = {
+  none: null,
+  bare: null,
+  full: null,
+  track: null,
+  ...linvail_meta_record,
+  ...symbolic_meta_record,
+  ...provenancy_meta_record,
+};
+
+/**
+ * @type {(
+ *   name: string,
+ * ) => name is import("./enum.d.ts").ProvenancyMeta}
+ */
+export const isProvenancyMeta = (name) => hasOwn(provenancy_meta_record, name);
+
 /**
  * @type {(
  *   name: string,
  * ) => name is import("./enum.d.ts").Meta}
  */
-export const isMeta = (name) => hasOwn(META_RECORD, name);
+export const isMeta = (name) => hasOwn(meta_record, name);

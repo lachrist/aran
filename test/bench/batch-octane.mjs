@@ -1,6 +1,6 @@
 import { stat, readFile } from "fs/promises";
 import { log } from "node:console";
-import { isMeta, OCTANE_BASE_ENUM } from "./enum.mjs";
+import { isMeta, octane_base_enum } from "./enum.mjs";
 import { toBasePath, toDumpPath, toMainPath } from "./layout.mjs";
 import { spawn } from "./spawn.mjs";
 import { argv } from "node:process";
@@ -27,14 +27,14 @@ const {
  * @type {import("./enum.d.ts").Meta[]}
  */
 const meta_enum = [
-  "none",
-  "bare",
-  "linvail/custom/external",
-  "linvail/custom/internal",
-  "linvail/standard/external",
-  "linvail/standard/internal",
-  "symbolic/intensional/void",
-  "symbolic/intensional/file",
+  // "none",
+  // "bare",
+  // "linvail/custom/external",
+  // "linvail/custom/internal",
+  // "linvail/standard/external",
+  // "linvail/standard/internal",
+  // "symbolic/intensional/void",
+  // "symbolic/intensional/file",
   "symbolic/extensional/void",
 ];
 
@@ -120,7 +120,24 @@ const main = async (argv) => {
   }
   /** @type {Result[]} */
   const results = [];
-  for (const base of OCTANE_BASE_ENUM) {
+  for (const base of octane_base_enum) {
+    if (
+      base === "navier-stokes" ||
+      base === "raytrace" ||
+      base === "regexp" ||
+      base === "richards" ||
+      base === "splay" ||
+      base === "box2d" ||
+      base === "code-load" ||
+      base === "crypto" ||
+      base === "deltablue" ||
+      base === "earley-boyer" ||
+      base === "gbemu" || // slow
+      base === "typescript" || // slow
+      base === "zlib"
+    ) {
+      continue;
+    }
     for (const meta of argv.length === 0 ? meta_enum : argv) {
       const result = await exec(meta, base);
       log(result);

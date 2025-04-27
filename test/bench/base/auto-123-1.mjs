@@ -1,2 +1,2 @@
 import { main } from "./auto.mjs";
-await main("123;", "module", 1);
+await main("123;", "script", 1);

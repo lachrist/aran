@@ -1,7 +1,3 @@
-const { URL } = globalThis;
-
-export const trace_home = new URL("trace", import.meta.url);
-
 /**
  * @type {(
  *   conf: {
@@ -10,8 +6,8 @@ export const trace_home = new URL("trace", import.meta.url);
  *   },
  * ) => string}
  */
-export const printTraceName = ({ base, meta }) =>
-  `trace/${base}-${meta.replaceAll("/", "-")}.txt`;
+export const printExecName = ({ base, meta }) =>
+  `${base}-${meta.replaceAll("/", "-")}`;
 
 /**
  * @type {(
@@ -21,7 +17,7 @@ export const printTraceName = ({ base, meta }) =>
  *   meta: import("../../enum.d.ts").Meta,
  * }}
  */
-export const parseTraceName = (name) => {
+export const parseExecName = (name) => {
   const [base, ...rest] = name.split("-");
   return {
     // eslint-disable-next-line object-shorthand

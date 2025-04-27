@@ -32,22 +32,25 @@ export type ModuleBase = AutoBase | OtherBase;
 
 export type Base = ModuleBase | OctaneBase;
 
-export type Meta =
-  | "none"
-  | "bare"
-  | "full"
-  | "track"
-  | "linvail"
-  | "linvail/standard/internal"
-  | "linvail/standard/external"
-  | "linvail/custom/internal"
-  | "linvail/custom/external"
-  | "symbolic/intensional/void"
-  | "symbolic/intensional/file"
-  | "symbolic/extensional/void"
-  | "symbolic/extensional/file"
+export type ProvenancyMeta =
   | "provenancy/stack"
   | "provenancy/intra"
   | "provenancy/inter"
   | "provenancy/store/internal"
   | "provenancy/store/external";
+
+export type LinvailMeta =
+  | "linvail/standard/internal"
+  | "linvail/standard/external"
+  | "linvail/custom/internal"
+  | "linvail/custom/external";
+
+export type SymbolicMeta =
+  | "symbolic/intensional/void"
+  | "symbolic/intensional/file"
+  | "symbolic/extensional/void"
+  | "symbolic/extensional/file";
+
+export type OtherMeta = "none" | "bare" | "full" | "track";
+
+export type Meta = OtherMeta | LinvailMeta | ProvenancyMeta | SymbolicMeta;

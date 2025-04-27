@@ -1,6 +1,7 @@
 import { closeSync, openSync, writeSync } from "node:fs";
-import { printTraceName, trace_home } from "./naming.mjs";
+import { printExecName } from "./naming.mjs";
 import { digestBranch } from "./branch.mjs";
+import { trace_home } from "./layout.mjs";
 
 const { URL, process, Array } = globalThis;
 
@@ -19,7 +20,7 @@ const { URL, process, Array } = globalThis;
  */
 export const compileRecordBranch = ({ buffer_length, meta, base }) => {
   const handle = openSync(
-    new URL(printTraceName({ base, meta }), trace_home),
+    new URL(`${printExecName({ base, meta })}.txt`, trace_home),
     "w",
   );
   const buffer = new Array(buffer_length);

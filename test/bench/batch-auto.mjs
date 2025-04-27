@@ -1,7 +1,7 @@
 import { stat, readFile, writeFile } from "node:fs/promises";
 import { log } from "node:console";
 import { argv } from "node:process";
-import { AUTO_BASE_ENUM, isAutoBase } from "./enum.mjs";
+import { auto_base_enum, isAutoBase } from "./enum.mjs";
 import { toBasePath, toMainPath } from "./layout.mjs";
 import { spawn } from "./spawn.mjs";
 import { time_location } from "./base/auto-time.mjs";
@@ -10,8 +10,8 @@ const { Error, URL, JSON, Math } = globalThis;
 
 /**
  * @typedef {{
- *   meta: import("./enum.js").Meta,
- *   base: import("./enum.js").AutoBase,
+ *   meta: import("./enum.d.ts").Meta,
+ *   base: import("./enum.d.ts").AutoBase,
  *   time: number[] | null,
  *   size: number | null,
  *   status: number | null,
@@ -20,23 +20,26 @@ const { Error, URL, JSON, Math } = globalThis;
  */
 
 /**
- * @type {import("./enum.js").Meta[]}
+ * @type {import("./enum.d.ts").Meta[]}
  */
 const meta_enum = [
-  // "none",
-  // "bare",
-  // "linvail/custom/external",
-  // "linvail/custom/internal",
-  // "linvail/standard/external",
-  // "linvail/standard/internal",
-  // "symbolic/intensional/void",
-  // "symbolic/intensional/file",
-  // "symbolic/extensional/void",
+  "none",
+  "bare",
+  "full",
+  "track",
+  "linvail/custom/external",
+  "linvail/custom/internal",
+  "linvail/standard/external",
+  "linvail/standard/internal",
   "provenancy/stack",
   "provenancy/intra",
   "provenancy/inter",
   "provenancy/store/external",
   "provenancy/store/internal",
+  "symbolic/intensional/void",
+  "symbolic/intensional/file",
+  "symbolic/extensional/void",
+  "symbolic/extensional/file",
 ];
 
 /**
@@ -53,8 +56,8 @@ const loadTime = async () => {
 
 /**
  * @type {(
- *   meta: import("./enum.js").Meta,
- *   base: import("./enum.js").AutoBase,
+ *   meta: import("./enum.d.ts").Meta,
+ *   base: import("./enum.d.ts").AutoBase,
  * ) => Promise<number | null>}
  */
 const loadSize = async (meta, base) => {
@@ -68,8 +71,8 @@ const loadSize = async (meta, base) => {
 
 /**
  * @type {(
- *   meta: import("./enum.js").Meta,
- *   base: import("./enum.js").AutoBase,
+ *   meta: import("./enum.d.ts").Meta,
+ *   base: import("./enum.d.ts").AutoBase,
  * ) => Promise<Result>}
  */
 const exec = async (meta, base) => {
@@ -106,7 +109,7 @@ const main = async (argv) => {
   }
   /** @type {Result[]} */
   const results = [];
-  for (const base of argv.length === 0 ? AUTO_BASE_ENUM : argv) {
+  for (const base of argv.length === 0 ? auto_base_enum : argv) {
     for (const meta of meta_enum) {
       const result = await exec(meta, base);
       log(result);

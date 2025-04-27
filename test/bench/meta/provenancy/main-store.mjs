@@ -80,7 +80,7 @@ const wrapHostReference = (host, kind) => ({
  *     recordBranch: (
  *       kind: import("aran").TestKind,
  *       prov: number,
- *       tag: import("./location.d.ts").NodeHash,
+ *       hash: import("./location.d.ts").NodeHash,
  *     ) => void,
  *     intrinsics: import("aran").IntrinsicRecord,
  *   },
@@ -125,12 +125,12 @@ const createAdvice = ({
   }
   return {
     ...toStandardAdvice(advice),
-    "primitive@after": (_state, value, _tag) => ({
+    "primitive@after": (_state, value, _hash) => ({
       type: "primitive",
       inner: value,
       prov: 1,
     }),
-    "intrinsic@after": (_state, _name, value, _tag) => {
+    "intrinsic@after": (_state, _name, value, _hash) => {
       if (isStandardPrimitive(value)) {
         return {
           type: "primitive",
@@ -141,11 +141,11 @@ const createAdvice = ({
         return wrap(/** @type {import("linvail").Value} */ (value));
       }
     },
-    "test@before": (_state, kind, value, tag) => {
-      recordBranch(kind, /** @type {any} */ (value).prov, tag);
+    "test@before": (_state, kind, value, hash) => {
+      recordBranch(kind, /** @type {any} */ (value).prov, hash);
       return value.inner;
     },
-    "apply@around": (_state, callee, that, input, _tag) => {
+    "apply@around": (_state, callee, that, input, _hash) => {
       if (
         internalize_global_scope &&
         (is(callee.inner, Function) || is(callee.inner, evalGlobal))
@@ -171,7 +171,7 @@ const createAdvice = ({
         return result;
       }
     },
-    "construct@around": (_state, callee, input, _tag) => {
+    "construct@around": (_state, callee, input, _hash) => {
       if (
         internalize_global_scope &&
         (is(callee.inner, Function) || is(callee.inner, evalGlobal))
