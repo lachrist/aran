@@ -83,6 +83,13 @@ const node_type_record = {
   YieldExpression: null, // 70
 };
 
+/**
+ * @type {(
+ *   input: string,
+ * ) => input is import("aran").EstreeNode<{}>["type"]}
+ */
+export const isNodeType = (input) => Object.hasOwn(node_type_record, input);
+
 const node_type_enum = /** @type {import("aran").EstreeNode<{}>["type"][]} */ (
   Reflect.ownKeys(node_type_record)
 );

@@ -23,23 +23,23 @@ const { Error, URL, JSON, Math } = globalThis;
  * @type {import("./enum.d.ts").Meta[]}
  */
 const meta_enum = [
-  "none",
-  "bare",
-  "full",
-  "track",
-  "linvail/custom/external",
-  "linvail/custom/internal",
-  "linvail/standard/external",
-  "linvail/standard/internal",
+  // "none",
+  // "bare",
+  // "full",
+  // "track",
+  // "linvail/custom/external",
+  // "linvail/custom/internal",
+  // "linvail/standard/external",
+  // "linvail/standard/internal",
   "provenancy/stack",
   "provenancy/intra",
   "provenancy/inter",
   "provenancy/store/external",
   "provenancy/store/internal",
-  "symbolic/intensional/void",
-  "symbolic/intensional/file",
-  "symbolic/extensional/void",
-  "symbolic/extensional/file",
+  // "symbolic/intensional/void",
+  // "symbolic/intensional/file",
+  // "symbolic/extensional/void",
+  // "symbolic/extensional/file",
 ];
 
 /**
@@ -111,6 +111,11 @@ const main = async (argv) => {
   const results = [];
   for (const base of argv.length === 0 ? auto_base_enum : argv) {
     for (const meta of meta_enum) {
+      // base === "auto-deltablue-5" &&
+      // (meta === "symbolic/extensional/file" ||
+      //   meta === "symbolic/extensional/void")
+      // ? "auto-deltablue-1"
+      // : base,
       const result = await exec(meta, base);
       log(result);
       results.push(result);

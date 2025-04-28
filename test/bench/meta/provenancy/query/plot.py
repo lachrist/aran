@@ -14,12 +14,24 @@ def load (name):
 
 def plotBox (name):
   data = load(name)
-  plot.boxplot(
-    data["data"],
-    load(name),
-    tick_labels = data["labels"],
-    showfliers = False,
-  )
+  if (data["type"] == "box"):
+    plot.boxplot(
+      data["data"],
+      load(name),
+      tick_labels = data["labels"],
+      showfliers = False,
+    )
+  elif (data["type"] == "hist"):
+    plot.hist(
+      data["data"],
+      bins = data["bins"],
+    )
+  else:
+    raise Exception("Unknown plot type: " + data["type"])
+  if ("xlabel" in data):
+    plot.xlabel(data["xlabel"])
+  if ("ylabel" in data):
+    plot.ylabel(data["ylabel"])
   if ("yscale" in data):
     plot.yscale(data["yscale"])
   if ("xscale" in data):

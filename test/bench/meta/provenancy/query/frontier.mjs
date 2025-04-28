@@ -6,8 +6,9 @@ import { loadTrace } from "../load.mjs";
 import { trace_home } from "../layout.mjs";
 import { fileURLToPath } from "node:url";
 import { spawn } from "../../../spawn.mjs";
+import { compileSelection } from "./select.mjs";
 
-const { JSON, URL, Error, Promise } = globalThis;
+const { Math, JSON, URL, Error, Promise } = globalThis;
 
 /**
  * @type {<X>(
@@ -94,50 +95,6 @@ export const crunch = async (base, { selectBranch }) => {
 
 /**
  * @type {(
- *   selection: string,
- * ) => (
- *   branch: import("../branch.d.ts").Branch,
- * ) => boolean}
- */
-const compileSelection = (selection) => {
-  switch (selection) {
-    case "all": {
-      return (_branch) => true;
-    }
-    case "switch": {
-      return ({ type }) => type === "SwitchCase";
-    }
-    case "cond": {
-      return ({ type }) =>
-        type === "ConditionalExpression" || type === "IfStatement";
-    }
-    case "loop": {
-      return ({ type }) =>
-        type === "WhileStatement" ||
-        type === "DoWhileStatement" ||
-        type === "ForStatement" ||
-        type === "ForInStatement" ||
-        type === "ForOfStatement";
-    }
-    case "cond+loop": {
-      return ({ type }) =>
-        type === "ConditionalExpression" ||
-        type === "IfStatement" ||
-        type === "SwitchCase" ||
-        type === "WhileStatement" ||
-        type === "DoWhileStatement" ||
-        type === "ForStatement" ||
-        type === "ForInStatement" ||
-        type === "ForOfStatement";
-    }
-    default: {
-      throw new Error("Invalid selection", { cause: { selection } });
-    }
-  }
-};
-
-/**
- * @type {(
  *   meta: import("../../../enum.d.ts").ProvenancyMeta,
  * ) => string}
  */
@@ -172,8 +129,50 @@ const labelize = (meta) => {
  *   ][],
  * ) => string}
  */
-const toBoxPlot = (entries) =>
+const toTexTable = (entries) => {
+  const lines = [];
+  lines.push("\\begin{tabular}{l|rrrrrr}");
+  lines.push([
+    "\\textbf{Analysis}",
+    "\\textbf{Mean}",
+    "\\textbf{p25}",
+    "\\textbf{p50}",
+    "\\textbf{p75}",
+    "\\textbf{p95}",
+    "\\textbf{p99}",
+  ]);
+  lines.push("\\hline");
+  for (const [meta, data] of entries) {
+    const label = labelize(meta);
+    const sort = data.toSorted();
+    const size = sort.length;
+    lines.push(
+      [
+        label,
+        Math.round(sort.reduce((a, b) => a + b, 0) / size),
+        sort[Math.floor(size * 0.25)],
+        sort[Math.floor(size * 0.5)],
+        sort[Math.floor(size * 0.75)],
+        sort[Math.floor(size * 0.95)],
+        sort[Math.floor(size * 0.99)],
+      ].join(" & ") + " \\\\",
+    );
+  }
+  lines.push("\\end{tabular}");
+  return lines.join("\n");
+};
+
+/**
+ * @type {(
+ *   entries: [
+ *     import("../../../enum.d.ts").ProvenancyMeta,
+ *     number[],
+ *   ][],
+ * ) => string}
+ */
+const toPlotData = (entries) =>
   JSON.stringify({
+    type: "box",
     labels: entries.map(get0).map(labelize),
     data: entries.map(get1),
   });
@@ -191,20 +190,28 @@ const main = async (argv) => {
     throw new Error("no selection", { cause: { argv } });
   }
   const [selection, ...base_enum] = argv;
-  const selectBranch = compileSelection(selection);
+  const selectType = compileSelection(selection);
   if (!base_enum.every(isBase)) {
     throw new Error("not all base", { cause: { argv } });
   }
   for (const base of base_enum) {
+    const entries = await crunch(base, {
+      selectBranch: ({ type }) => selectType(type),
+    });
     await writeFile(
-      new URL(`${base}.json`, trace_home),
-      toBoxPlot(await crunch(base, { selectBranch })),
+      new URL(`${base}-${selection}.json`, trace_home),
+      toPlotData(entries),
+      "utf8",
+    );
+    await writeFile(
+      new URL(`${base}-${selection}.tex`, trace_home),
+      toTexTable(entries),
       "utf8",
     );
   }
   const { status, signal } = await spawn("python3", [
-    fileURLToPath(new URL("boxplot.py", import.meta.url)),
-    ...base_enum,
+    fileURLToPath(new URL("plot.py", import.meta.url)),
+    ...base_enum.map((base) => `${base}-${selection}`),
   ]);
   if (status !== 0 || signal !== null) {
     throw new Error("python3 failed", { cause: { status, signal } });

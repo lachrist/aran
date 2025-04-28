@@ -6,6 +6,7 @@ import { spawn } from "../../../spawn.mjs";
 import { fileURLToPath } from "node:url";
 import { printExecName } from "../naming.mjs";
 import { trace_home } from "../layout.mjs";
+import { compileSelection } from "./select.mjs";
 
 const { URL, JSON, Array, Map, Error, Math } = globalThis;
 
@@ -212,42 +213,26 @@ const toLabel = (name) => labelization[name];
 
 /**
  * @type {(
- *   entry: [Type, number[]],
- * ) => boolean}
- */
-const selectEntry = ([type]) =>
-  // type === "MemberExpression" ||
-  type === "SwitchCase" ||
-  type === "ConditionalExpression" ||
-  type === "IfStatement" ||
-  type === "WhileStatement" ||
-  type === "DoWhileStatement" ||
-  type === "ForStatement" ||
-  type === "AssignmentExpression" ||
-  type === "ForInStatement";
-// type === "Property" ||
-// type === "ArrayPattern" ||
-// type === "SpreadElement" ||
-// type === "ClassBody" ||
-// type === "ClassExpression" ||
-// type === "MethodDefinition" ||
-// type === "UnaryExpression" ||
-// type === "ForOfStatement" ||
-// type === "FunctionExpression" ||
-// type === "ObjectPattern" ||
-// type === "FunctionDeclaration";
-
-/**
- * @type {(
  *   entries: [Type, number[]][],
  * ) => string}
  */
-const toBoxPlot = (entries) =>
-  JSON.stringify({
-    labels: entries.map(get0).map(toLabel),
-    data: entries.map(get1),
-    // yscale: "log",
-  });
+const toPlotData = (entries) =>
+  JSON.stringify(
+    entries.length === 1
+      ? {
+          type: "hist",
+          data: entries[0][1],
+          bins: 50,
+          yscale: "log",
+          // xscale: "log",
+        }
+      : {
+          type: "box",
+          labels: entries.map(get0).map(toLabel),
+          data: entries.map(get1),
+          // yscale: "log",
+        },
+  );
 
 /**
  * @type {(
@@ -255,10 +240,11 @@ const toBoxPlot = (entries) =>
  * ) => Promise<void>}
  */
 const main = async (argv) => {
-  if (argv.length !== 2) {
-    throw new Error("Expected two CLI arguments", { cause: argv });
+  if (argv.length !== 3) {
+    throw new Error("CLI Arg: selection meta base", { cause: argv });
   }
-  const [meta, base] = argv;
+  const [pred, meta, base] = argv;
+  const selectType = compileSelection(pred);
   if (!isMeta(meta)) {
     throw new Error("not a meta", { cause: { meta } });
   }
@@ -274,11 +260,11 @@ const main = async (argv) => {
   );
   await writeFile(
     new URL(`${printExecName({ base, meta })}.json`, trace_home),
-    toBoxPlot(entries.filter(selectEntry)),
+    toPlotData(entries.filter(([type]) => selectType(type))),
     "utf8",
   );
   const { status, signal } = await spawn("python3", [
-    fileURLToPath(new URL("boxplot.py", import.meta.url)),
+    fileURLToPath(new URL("plot.py", import.meta.url)),
     printExecName({ base, meta }),
   ]);
   if (status !== 0 || signal !== null) {
