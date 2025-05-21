@@ -2,6 +2,7 @@ import json
 import matplotlib.pyplot as plot
 import os
 import sys
+import numpy
 
 __dirname__ = os.path.dirname(__file__)
 
@@ -11,6 +12,10 @@ def locate (name, ext):
 def load (name):
   with open(locate(name, "json"), "r") as file:
     return json.load(file)
+
+def trimPercentile (data, percentile):
+  threshold = numpy.percentile(data, percentile)
+  return [x for x in data if x < threshold]
 
 def plotBox (name):
   data = load(name)
@@ -23,7 +28,7 @@ def plotBox (name):
     )
   elif (data["type"] == "hist"):
     plot.hist(
-      data["data"],
+      trimPercentile(data["data"], 99),
       bins = data["bins"],
     )
   else:

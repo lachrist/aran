@@ -1,5 +1,5 @@
 import { argv } from "node:process";
-import { isBase, isMeta } from "../../../enum.mjs";
+import { isMeta, isModuleBase } from "../../../enum.mjs";
 import { loadTrace } from "../load.mjs";
 import { writeFile } from "node:fs/promises";
 import { spawn } from "../../../spawn.mjs";
@@ -84,23 +84,34 @@ const partition = (trace) => {
 
 /**
  * @type {(
- *   entry: [Type, number[]],
+ *   tex: string | number,
  * ) => string}
  */
-const toTexRow = ([type, data]) => {
+const wrapCode = (tex) => `\\code{${tex}}`;
+
+/**
+ * @type {(
+ *   entry: [Type, number[]],
+ *   total: number,
+ * ) => string}
+ */
+const toTexRow = ([type, data], total) => {
   const sort = data.toSorted(substract);
   const size = sort.length;
+  const percent = Math.round((size / total) * 100);
   return (
     [
       type,
-      size,
+      `${size}~[${percent < 10 ? "~" : ""}${percent}\\%]`,
       Math.round(sort.reduce(add, 0) / size),
       sort[Math.floor(size * 0.25)],
       sort[Math.floor(size * 0.5)],
       sort[Math.floor(size * 0.75)],
       sort[Math.floor(size * 0.95)],
       sort[Math.floor(size * 0.99)],
-    ].join(" & ") + " \\\\"
+    ]
+      .map(wrapCode)
+      .join(" & ") + " \\\\"
   );
 };
 
@@ -109,23 +120,25 @@ const toTexRow = ([type, data]) => {
  *   entries: [Type, number[]][],
  * ) => string}
  */
-const toTexTable = (entries) =>
-  [
+const toTexTable = (entries) => {
+  const total = entries.reduce((acc, [_type, data]) => acc + data.length, 0);
+  return [
     "\\begin{tabular}{l|rrrrrrr}",
-    "\\hline",
     [
       "\\textbf{Type}",
       "\\textbf{Size}",
       "\\textbf{Mean}",
-      "\\textbf{p25\\%}",
-      "\\textbf{p50\\%}",
-      "\\textbf{p75\\%}",
-      "\\textbf{p95\\%}",
-      "\\textbf{p99\\%}",
+      "\\textbf{P25}",
+      "\\textbf{P50}",
+      "\\textbf{P75}",
+      "\\textbf{P95}",
+      "\\textbf{P99}",
     ].join(" & ") + " \\\\",
-    ...entries.map(toTexRow),
+    "\\hline",
+    ...entries.map((entry) => toTexRow(entry, total)),
     "\\end{tabular}",
   ].join("\n");
+};
 
 /**
  * @type {{[key in Type]: string}}
@@ -222,15 +235,18 @@ const toPlotData = (entries) =>
       ? {
           type: "hist",
           data: entries[0][1],
-          bins: 50,
+          bins: 20,
           yscale: "log",
+          xlabel: "Provenancy",
+          ylabel: "Occurence",
           // xscale: "log",
         }
       : {
           type: "box",
           labels: entries.map(get0).map(toLabel),
           data: entries.map(get1),
-          // yscale: "log",
+          ylabel: "Provenancy",
+          yscale: "log",
         },
   );
 
@@ -248,13 +264,13 @@ const main = async (argv) => {
   if (!isMeta(meta)) {
     throw new Error("not a meta", { cause: { meta } });
   }
-  if (!isBase(base)) {
+  if (!isModuleBase(base)) {
     throw new Error("not a base", { cause: { base } });
   }
   const trace = await loadTrace({ base, meta });
   const entries = partition(trace).toSorted(compareEntry);
   await writeFile(
-    new URL(`${printExecName({ base, meta })}.tex`, trace_home),
+    new URL(`${printExecName({ base, meta })}-origin.tex`, trace_home),
     toTexTable(entries),
     "utf8",
   );

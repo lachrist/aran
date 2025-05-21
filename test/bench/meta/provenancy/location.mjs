@@ -1,5 +1,6 @@
 const {
   Error,
+  Object: { hasOwn },
   Reflect: { apply },
   String: {
     prototype: { split },
@@ -10,20 +11,31 @@ const colon = [":"];
 
 /**
  * @type {(
- *   loc: unknown
+ *   node: object,
  * ) => string}
  */
-// @ts-ignore
-// eslint-disable-next-line local/no-optional-chaining
-const _printLocation = (loc) => `#${loc?.start?.line}-${loc?.start?.column}`;
+const printLocation = (node) => {
+  if (hasOwn(node, "loc")) {
+    const {
+      loc: {
+        start: { line, column },
+      },
+    } = /** @type {any} */ (node);
+    return `${line}-${column}`;
+  } else {
+    return "???";
+  }
+};
 
 /**
  * @type {import("aran").Digest<{
  *   NodeHash: import("./location.d.ts").NodeHash,
  * }>}
  */
-export const digest = ({ type }, node_path, _file_path, _kind) =>
-  /** @type {import("./location.d.ts").NodeHash} */ (`${type}:${node_path}`);
+export const digest = (node, node_path, _file_path, _kind) =>
+  /** @type {import("./location.d.ts").NodeHash} */ (
+    `${node.type}:${node_path}#${printLocation(node)}`
+  );
 
 /**
  * @type {(

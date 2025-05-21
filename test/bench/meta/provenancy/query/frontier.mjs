@@ -123,6 +123,14 @@ const labelize = (meta) => {
 
 /**
  * @type {(
+ *   a: number,
+ *   b: number,
+ * ) => number}
+ */
+const substract = (a, b) => a - b;
+
+/**
+ * @type {(
  *   entries: [
  *     import("../../../enum.d.ts").ProvenancyMeta,
  *     number[],
@@ -132,19 +140,21 @@ const labelize = (meta) => {
 const toTexTable = (entries) => {
   const lines = [];
   lines.push("\\begin{tabular}{l|rrrrrr}");
-  lines.push([
-    "\\textbf{Analysis}",
-    "\\textbf{Mean}",
-    "\\textbf{p25}",
-    "\\textbf{p50}",
-    "\\textbf{p75}",
-    "\\textbf{p95}",
-    "\\textbf{p99}",
-  ]);
+  lines.push(
+    [
+      "\\textbf{Analysis}",
+      "\\textbf{Mean}",
+      "\\textbf{P25}",
+      "\\textbf{P50}",
+      "\\textbf{P75}",
+      "\\textbf{P95}",
+      "\\textbf{P99}",
+    ].join(" & ") + " \\\\",
+  );
   lines.push("\\hline");
   for (const [meta, data] of entries) {
     const label = labelize(meta);
-    const sort = data.toSorted();
+    const sort = data.toSorted(substract);
     const size = sort.length;
     lines.push(
       [
@@ -175,6 +185,8 @@ const toPlotData = (entries) =>
     type: "box",
     labels: entries.map(get0).map(labelize),
     data: entries.map(get1),
+    yscale: "linear",
+    ylabel: "Provenancy",
   });
 
 /**
