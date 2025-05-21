@@ -21,12 +21,12 @@ const log = (data) => {
 };
 
 addEventListener("error", (event) => {
-  log(event.message);
+  log(`Async error: ${event.message}`);
   event.preventDefault();
 });
 
 addEventListener("unhandledrejection", (event) => {
-  log("Promise rejection: " + String(event.reason));
+  log(`Promise rejection: ${String(event.reason)}`);
   event.preventDefault();
 });
 
@@ -51,6 +51,11 @@ const descriptor = {
 defineProperty(globalThis, "__context", descriptor);
 
 addEventListener("message", ({ data: { meta, base } }) => {
-  context.target = base;
-  evalGlobal(meta);
+  try {
+    context.target = base;
+    evalGlobal(meta);
+  } catch (error) {
+    console.dir(error);
+    log(String(error));
+  }
 });

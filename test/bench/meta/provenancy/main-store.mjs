@@ -142,9 +142,6 @@ const createAdvice = ({
       }
     },
     "test@before": (_state, kind, value, hash) => {
-      if (hash.startsWith("ConditionalExpression") && value.prov > 1000) {
-        debugger;
-      }
       recordBranch(kind, /** @type {any} */ (value).prov, hash);
       return value.inner;
     },

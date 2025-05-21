@@ -17,5 +17,5 @@
       "aran/runtime": ["../lib/runtime/index.d.ts"]
     }
   },
-  "exclude": ["**/*-template.mjs"]
+  "exclude": ["**/*-template.mjs", "./out/"]
 }

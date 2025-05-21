@@ -1,7 +1,7 @@
 {
   "name": "aran",
   "description": "JavaScript instrumenter",
-  "version": "5.2.1",
+  "version": "5.2.2",
   "author": {
     "name": "Laurent Christophe",
     "email": "laurent.christophe.terken@gmail.com"
@@ -88,7 +88,7 @@
     "esbuild": "^0.25.2",
     "eslint": "^9.9.1",
     "http-server": "^14.1.1",
-    "linvail": "^7.7.9",
+    "linvail": "^7.8.3",
     "prettier": "^3.0.0",
     "rollup": "^4.34.9",
     "typedoc": "^0.26.5",

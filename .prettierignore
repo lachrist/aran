@@ -1,4 +1,5 @@
 /coverage/
+/doc/out/
 /node_modules/
 /octane/
 /test/bench/meta/symbolic/extensional/analysis.inst.mjs
