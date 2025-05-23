@@ -1,4 +1,5 @@
 {
   "title": "Provenance Tracking with Linvail",
+  "description": "This demo shows how precisely Linvail tracks the provenance of primitive values.",
   "order": 5
 }

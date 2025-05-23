@@ -1,4 +1,5 @@
 {
   "title": "Playground",
+  "description": "This demo logs the AST of the target program after it has been transpiled by Aran.",
   "order": 1
 }

@@ -1,4 +1,5 @@
 {
   "title": "Comprehensive Tracing",
+  "description": "This demo showcases the full capabilities of Aran's standard join point model.",
   "order": 3
 }

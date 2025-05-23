@@ -1,4 +1,5 @@
 {
   "title": "Basic Tracing of Function Calls",
+  "description": "This demo traces function calls by weaving logic at the `apply@around` join point.",
   "order": 2
 }

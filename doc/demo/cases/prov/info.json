@@ -1,4 +1,5 @@
 {
   "title": "Provenancial Equality with Linvail",
+  "description": "This minimal demo illustrates how Linvail differentiates primitive values based on their provenance.",
   "order": 4
 }
