@@ -1,81 +1,64 @@
 // Target //
 
-/** @type {(value: unknown) => void} */
-const log = /** @type {any} */ (globalThis).log;
-
-/** @type {import("linvail").Library} */
-const Linvail = /** @type {any} */ (globalThis).Linvail;
-
-const { is, dir, Map: LinvailMap } = Linvail;
-
-const assert = (/** @type {boolean} */ check) => {
-  if (!check) throw new Error("Assertion failure");
-};
-
-/** @type {(val1: unknown, val2: unknown) => void} */
-const same = (val1, val2) => assert(is(val1, val2));
-
-/** @type {(val1: unknown, val2: unknown) => void} */
-const diff = (val1, val2) => assert(!is(val1, val2));
+const { log } = globalThis;
+const { is, dir, Map: LinvailMap } = globalThis.Linvail;
 
 const num = 123;
 
-// Provenancial Equality //
-same(num, num);
-diff(num, 123);
+log("\nProvenancial Equality");
+log(is(num, num)); // ✅ true
+log(is(num, 123)); // ✅ false
 
-// Inspection //
-log(num); // 123 (transparency preservation)
-dir(num); // { __inner: 123, __index: <id> }
+log("\nInspection");
+log(num); // 👀 123
+dir(num); // 👀 { inner: 123, index: ... }
 
-// Provenance Preservation >> Function //
+log("\nProvenance Preservation >> Function");
 const identity = (/** @type {unknown} */ x) => x;
-same(identity(num), num);
-diff(identity(num), 123);
+log(is(identity(num), num)); // ✅ true
+log(is(identity(num), 123)); // ✅ false
 
-// Provenance Preservation >> Plain Object //
+log("\nProvenance Preservation >> Plain Object");
 const object = { num };
-same(object.num, num);
-diff(object.num, 123);
+log(is(object.num, num)); // ✅ true
+log(is(object.num, 123)); // ✅ false
 
-// Provenance Preservation >> Array //
+log("\nProvenance Preservation >> Array");
 const array = [num];
-same(array[0], num);
-diff(array[0], 123);
+log(is(array[0], num)); // ✅ true
+log(is(array[0], 123)); // ✅ false
 
-// Provenance Preservation >> Builtin //
+log("\nProvenance Preservation >> Builtin");
 const copy = array.map(identity);
-same(copy[0], num);
-diff(copy[0], 123);
+log(is(copy[0], num)); // ✅ true
+log(is(copy[0], 123)); // ✅ false
 
-// Provenance Loss >> Promise //
-const promise = Promise.resolve(num);
-promise.then((res) => diff(res, num));
+Promise.resolve(num).then((res) => {
+  log("\nProvenance Loss >> Promise");
+  log(is(res, num)); // ❌ false
+});
 
-// Provenance Loss >> ES6 Collection //
+log("\nProvenance Loss >> ES6 Collection");
 const map1 = new Map([[num, num]]);
-assert(map1.has(123));
 map1.forEach((val, key) => {
-  diff(key, num);
-  diff(val, num);
+  log(is(key, num)); // ❌ false
+  log(is(val, num)); // ❌ false
 });
 
-// Provenance Preservation >> Linvail Collection //
+log("\nProvenance Preservation >> Linvail Collection");
 const map2 = new LinvailMap([[num, num]]);
-assert(map2.has(num));
-assert(!map2.has(123));
+log(map2.has(num)); // ✅ true
+log(map2.has(123)); // ✅ false
 map2.forEach((val, key) => {
-  same(key, num);
-  diff(key, 123);
-  same(val, num);
-  diff(val, 123);
+  log(is(key, num)); // ✅ true
+  log(is(key, 123)); // ✅ false
+  log(is(val, num)); // ✅ true
+  log(is(val, 123)); // ✅ false
 });
 
-// Provenance Loss >> Partial Instrumentation //
-globalThis.eval(`(({ num, object, is, log }) => {
-  if (is(object.num, num))
-    throw new Error("expect provenance loss");
-  log(object.num); // 123 (transparency preservation)
-});`)({ num, object, is, log });
-
-log("done");
+log("\nProvenance Loss >> Partial Instrumentation");
+globalThis.eval(`(({ num, object, is, log, dir }) => {
+  log(is(object.num, num)); // ❌ false
+  log(object.num); // 👀 123
+  dir(object.num); // 👀 123
+});`)({ num, object, is, log, dir });

@@ -55,6 +55,7 @@ Reflect.defineProperty(globalThis, advice_global_variable, { value: advice });
 const root1 = parse(target, { sourceType: "script", ecmaVersion: 2024 });
 const root2 = instrument(
   { kind: "eval", path: "main", root: root1 },
+  // In standalone mode, the intrinsic record requires no setup.
   { mode: "standalone", advice_global_variable, pointcut: ["apply@around"] },
 );
 globalThis.eval(generate(root2));
